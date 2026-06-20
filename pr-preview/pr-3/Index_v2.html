@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bingo Musical Valdemoro del Rey</title>
+<style>
+  :root{
+    --bg:#0f1220; --card:#171a2b; --muted:#aab3c5; --text:#eaf0ff; --accent:#4cc9f0; --ok:#38d39f; --warn:#ffbe0b; --danger:#ef476f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b0e1a 0%,#11162b 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial}
+  .wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid #1f2340;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  header.card{padding:18px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0}
+  header .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .btn{appearance:none;border:1px solid #2d3156;background:#1b1f39;color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#001220}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .toggle{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+  .main{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
+  @media (max-width:900px){.main{grid-template-columns:1fr}}
+  .now.card{padding:18px}
+  .now h2{margin:0 0 8px 0;font-size:16px;color:var(--muted);display:flex;align-items:center;gap:12px}
+  .counters{font-size:13px;color:var(--muted);display:flex;gap:10px}
+  .songBox{display:flex;gap:16px;align-items:flex-start;justify-content:space-between}
+  .songMeta{min-height:72px;flex:1}
+  .title{font-size:22px;font-weight:800;margin:0}
+  .artist{margin:6px 0 0 0;color:var(--muted)}
+  .ball{display:inline-flex;align-items:center;justify-content:center;min-width:78px;height:78px;border-radius:50%;
+        background:radial-gradient(circle at 30% 30%, #fff, #eaeaea 60%, #d0d0d0);color:#111;border:2px solid #cfcfcf;
+        font-weight:900;font-size:30px;box-shadow:inset 0 2px 10px rgba(0,0,0,.3), 0 10px 18px rgba(0,0,0,.25)}
+  .links{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .linkIcon{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #2d3156;border-radius:8px;text-decoration:none;color:var(--text);background:#151935}
+  .linkIcon:hover{border-color:var(--accent)}
+  .apple svg,.yt svg{width:18px;height:18px}
+  .lists{display:grid;gap:16px}
+  .list.card{padding:14px 14px 8px}
+  .list h3{margin:0 0 10px 0;font-size:16px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  @media (max-width:700px){.grid{grid-template-columns:1fr}}
+  .pill{padding:8px 10px;background:#141835;border:1px solid #2b2f52;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .pill small{color:var(--muted)}
+  .pill.used{opacity:.55}
+  .pill .open{margin-left:auto}
+  details.loader{margin-top:16px}
+  details.loader>summary{cursor:pointer;user-select:none;padding:14px 16px}
+  .loader .panel{padding:0 16px 16px}
+  textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52;background:#0f1330;color:var(--text);padding:12px;resize:vertical}
+  .loader .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .msg{margin-top:8px;font-size:13px;color:var(--muted)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="card">
+    <h1>🎵 Bingo Musical Valdemoro del Rey</h1>
+    <div class="controls">
+      <button id="drawBtn" class="btn primary">Sacar bola</button>
+      <button id="resetBtn" class="btn">Reiniciar</button>
+      <label class="toggle"><input type="checkbox" id="cbShowBall" checked> Mostrar nº de bola</label>
+      <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
+      <label class="toggle"><input type="checkbox" id="cbAutoOpen" checked> Abrir enlace al sacar bola</label>
+    </div>
+  </header>
+
+  <section class="main">
+    <div class="now card">
+      <h2>
+        Última bola
+        <span class="counters">
+          · <strong id="countDrawn">0</strong> salidas
+          · <strong id="countPending">0</strong> pendientes
+          · Total: <strong id="countTotal">0</strong>
+        </span>
+      </h2>
+      <div class="songBox">
+        <div class="ball" id="ballNum">–</div>
+        <div class="songMeta">
+          <p class="title" id="songTitle">—</p>
+          <p class="artist" id="songArtist">—</p>
+          <div class="links" id="songLinks"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lists">
+      <div class="list card">
+        <h3>Ya salieron</h3>
+        <div id="drawnList" class="grid"></div>
+      </div>
+      <div class="list card">
+        <h3>Pendientes</h3>
+        <div id="pendingList" class="grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Carga de JSON plegable -->
+  <details class="loader card" id="loaderBox" close>
+    <summary>📥 Cargar / editar JSON</summary>
+    <div class="panel">
+      <p class="msg">Pega aquí tu JSON (puede ser el wrapper con <code>tracks</code> o un array de pistas). Al cargar, se insertará <strong>en la posición 24</strong> una entrada de YouTube: <code>https://youtu.be/fFymS4MOzW0?si=HHfD8zbTIdWuHcXm</code>.</p>
+      <textarea id="jsonInput" placeholder="Pega aquí el JSON…"></textarea>
+      <div class="row">
+        <button id="loadBtn" class="btn primary">Cargar JSON</button>
+        <button id="useScriptBtn" class="btn">Cargar JSON embebido</button>
+        <button id="toggleLoader" class="btn">Ocultar panel</button>
+      </div>
+      <p class="msg" id="statusMsg"></p>
+    </div>
+  </details>
+
+  <!-- Generador de cartones -->
+  <details class="loader card" id="loaderBox" close>
+    <summary>🧾 Generar cartones (PDF)</summary>
+    <div class="row">
+      <label>Cantidad: <input id="qty" type="number" min="2" max="40" step="2" value="40" style="width:80px"></label>
+      <button id="genBtn" class="btn primary">Generar cartones (PDF)</button>
+      <span class="msg">A4 vertical · 2 cartones por página · 4×2 · “24” forzado al Pasodoble</span>
+    </div>
+    <p class="msg">Usa la lista actualmente cargada arriba. Si no has cargado nada, puedes usar “Cargar JSON embebido”.</p>
+  </details>
+
+  <!-- JSON embebido (original). La inserción del vídeo se hace al cargar -->
+  <script type="application/json" id="initialJson">
+    [
+      {
+        "description" : null,
+        "tracks" : [
+          {"serviceId":"1690003453","isrc":"ESUM72301752","artist":"Aitana","service":"applemusic","album":"LAS BABYS - Single","track":"LAS BABYS"},
+          {"serviceId":"1625189890","artist":"Sangiovanni & Aitana","isrc":"ITZ042200146","album":"mariposas - Single","service":"applemusic","track":"mariposas"},
+          {"service":"applemusic","track":"GRAN VÍA","isrc":"ES03H2400005","serviceId":"1780125579","artist":"Quevedo & Aitana","album":"BUENAS NOCHES"},
+          {"serviceId":"726347452","album":"No Es Pecado (Remastered)","isrc":"ES5088602056","artist":"Alaska y Dinarama","track":"A Quién Le Importa","service":"applemusic"},
+          {"artist":"Alejandro Sanz","service":"applemusic","track":"Corazón partío","serviceId":"478735639","album":"Colección definitiva (Super Deluxe iTunes exclusive)","isrc":"ES5159706045"},
+          {"album":"Los Amigos de Mis Amigas Son Mis Amigos","service":"applemusic","track":"Los Amigos de Mis Amigas Son Mis Amigos","artist":"Objetivo Birmania","serviceId":"1255652871","isrc":"ES5118900095"},
+          {"track":"La Puerta de Alcalá (feat. Ana Belén)","album":"Dual","artist":"Aleks Syntek","service":"applemusic","serviceId":"1299890926","isrc":"MXF011700221"},
+          {"isrc":"ES5118001337","track":"No Dudaría","serviceId":"284746940","album":"Lo Mejor de Antonio","service":"applemusic","artist":"Antonio Flores"},
+          {"serviceId":"693126354","track":"Cuando Zarpa El Amor","service":"applemusic","isrc":"ES5080400083","artist":"Camela","album":"Dioni, Ángeles y Miguel"},
+          {"artist":"CantaJuego","serviceId":"1815321362","isrc":"ES6081810816","album":"Super Éxitos","track":"Soy una Taza (Versión 2019)","service":"applemusic"},
+          {"isrc":"COFC10910010","album":"Día Tras Día","artist":"Andrés Cepeda","service":"applemusic","serviceId":"1735811389","track":"Se Te Nota"},
+          {"service":"applemusic","serviceId":"1623372943","album":"SloMo (Eurovision's Dancebreak Edit) - Single","artist":"Chanel","track":"SloMo (Eurovision's Dancebreak Edit)","isrc":"ES94B2200107"},
+          {"track":"Torero","artist":"Chayanne","album":"Grandes Éxitos","isrc":"NLB630200016","service":"applemusic","serviceId":"162308851"},
+          {"service":"applemusic","serviceId":"1443353134","isrc":"ES6010200167","album":"Chenoa","track":"Cuando Tú Vas","artist":"Chenoa"},
+          {"track":"La Chica Ye-Ye","isrc":"DEXN92264767","serviceId":"1620245427","service":"applemusic","artist":"Concha Velasco","album":"Las Canciones de Concha Velasco"},
+          {"serviceId":"1630351475","service":"applemusic","isrc":"ES6010100020","album":"Me Vale","artist":"Coyote Dax","track":"No Rompas Mi Corazón"},
+          {"track":"Azul","isrc":"USBL10100287","album":"Cancionero","service":"applemusic","artist":"Cristian Castro","serviceId":"1140337878"},
+          {"artist":"David Bisbal","service":"applemusic","isrc":"ES6010200293","track":"Ave María","serviceId":"1442852141","album":"Corazón Latino"},
+          {"service":"applemusic","isrc":"USUM71020778","track":"Danza Kuduro (feat. Lucenzo)","serviceId":"1440636498","artist":"Don Omar","album":"Meet The Orphans (Deluxe Edition)"},
+          {"serviceId":"289543922","album":"Resistiré","isrc":"ES5110002956","track":"Resistiré","artist":"Dúo Dinámico","service":"applemusic"},
+          {"album":"Canciones para Toda la Vida","isrc":"ES5089302510","track":"El Chacachá del Tren","artist":"El Consorcio","serviceId":"699619884","service":"applemusic"},
+          {"artist":"Estopa","serviceId":"1109973192","track":"Por la Raja de Tu Falda","album":"Esencial Estopa","service":"applemusic","isrc":"ES5029900140"},
+          {"album":"Canciones Prohibidas","isrc":"ES5019814000","service":"applemusic","track":"Salir","serviceId":"403729816","artist":"Extremoduro"},
+          {"isrc":"QZTB82355610","album":"Potra Salvaje (Hard Remix) - Single","artist":"Isabel Aaiún","track":"Potra Salvaje (Hard Remix)","serviceId":"1750981699","service":"applemusic"},
+          {"service":"applemusic","track":"Se Me Enamora el Alma","album":"Pasión y Deseo - Sus Grandes Éxitos de la Copla y de la Balada Romántica","artist":"Isabel Pantoja","serviceId":"333607875","isrc":"ES5028900068"},
+          {"service":"applemusic","isrc":"ES5029200072","track":"Y Nos Dieron las Diez","album":"Física y Química","artist":"Joaquín Sabina","serviceId":"268603427"},
+          {"isrc":"USJ3V1862535","album":"Merengue Mania ¡Éxitos Latino!","track":"La Bilirrubina","artist":"Juan Luis Guerra","service":"applemusic","serviceId":"1560870008"},
+          {"serviceId":"323475992","isrc":"NLB637800101","album":"Mi Vida - Grandes Éxitos","service":"applemusic","track":"Soy un Truhán, Soy un Señor","artist":"Julio Iglesias"},
+          {"track":"El Baúl de los Recuerdos","artist":"Karina","service":"applemusic","isrc":"ES5299400048","album":"Mágicos 60","serviceId":"157403400"},
+          {"serviceId":"1819545673","isrc":"USUG12400968","track":"Si Antes Te Hubiera Conocido","service":"applemusic","artist":"KAROL G","album":"Tropicoqueta"},
+          {"serviceId":"1444002414","track":"No Estamos Lokos (Kalikeno)","service":"applemusic","isrc":"ES5009500064","artist":"Ketama","album":"De Aki a Ketama"},
+          {"album":"Hoy Sus 30 Mejores Canciones","service":"applemusic","track":"Carmen","isrc":"ES5630700152","artist":"Los Chunguitos","serviceId":"259103307"},
+          {"serviceId":"258647542","isrc":"ES5109500538","track":"Macarena (Original Version)","artist":"Los del Río","service":"applemusic","album":"Fiesta Macarena"},
+          {"artist":"Los del Río","isrc":"ES5100100219","service":"applemusic","album":"Alegría y Cosabuena","track":"Sevilla Tiene un Color Especial","serviceId":"255684965"},
+          {"track":"Amigos para Siempre","album":"Rumbas Sin Fronteras","artist":"Los Manolos","service":"applemusic","isrc":"ES5020100334","serviceId":"255677282"},
+          {"track":"Déjame","serviceId":"101205025","artist":"Los Secretos","service":"applemusic","isrc":"ES6009600120","album":"Grandes Éxitos"},
+          {"serviceId":"1445025224","isrc":"USUM71700112","album":"Despacito (Versión Pop) - Single","track":"Despacito (Versión Pop)","artist":"Luis Fonsi","service":"applemusic"},
+          {"track":"Pájaros de Barro","isrc":"ES5029800161","album":"Arena en los Bolsillos","artist":"Manolo García","service":"applemusic","serviceId":"276995935"},
+          {"album":"El Merengue - Single","service":"applemusic","isrc":"USSD12300040","track":"El Merengue","artist":"Marshmello & Manuel Turizo","serviceId":"1673869624"},
+          {"album":"Sueños Líquidos","serviceId":"306124358","service":"applemusic","artist":"Maná","track":"Clavado en un Bar","isrc":"MXF159700094"},
+          {"track":"Mari Carmen","serviceId":"1472265522","service":"applemusic","artist":"La Pegatina","album":"Xapomelön","isrc":"ES7311100021"},
+          {"album":"Lo Mejor de Marta Sánchez","service":"applemusic","artist":"Marta Sánchez","isrc":"ES5700501183","track":"Soldados del Amor (Love Crusaders) [Live]","serviceId":"1442665094"},
+          {"service":"applemusic","artist":"Beatriz y su Acordeón","serviceId":"1728036402","album":"Poquito a Poco","isrc":"ES7421600239","track":"El Polvorete"},
+          {"track":"Se Acabó","album":"12 Grandes Éxitos","artist":"María Jiménez","service":"applemusic","serviceId":"128179175","isrc":"ES5079100127"},
+          {"service":"applemusic","track":"Hoy no Me Puedo Levantar","serviceId":"1559885440","album":"Mecano","isrc":"ES5029700676","artist":"Mecano"},
+          {"album":"Caminando Por La Vida (Remastered)","track":"Caminando Por La Vida (Remastered)","service":"applemusic","artist":"Melendi","serviceId":"726341812","isrc":"ES5080700531"},
+          {"track":"El Baile del Gorila","service":"applemusic","serviceId":"1339123856","isrc":"ES5110103506","album":"De Pata Negra","artist":"Melody"},
+          {"artist":"Miguel Bosé","isrc":"NLB638490150","serviceId":"422022735","album":"Bandido","track":"Amante Bandido","service":"applemusic"},
+          {"isrc":"ES5110002561","artist":"Mónica Naranjo","serviceId":"283536755","service":"applemusic","track":"Sobreviviré","album":"Minage"},
+          {"service":"applemusic","serviceId":"1443284629","album":"Un Beso Y Una Flor (Remastered 2016)","artist":"Nino Bravo","track":"Un Beso Y Una Flor (Remastered 2016)","isrc":"ES5701600285"},
+          {"track":"Historias de amor","service":"applemusic","serviceId":"695551557","album":"Llámalo Sueño","artist":"OBK","isrc":"ES1059200100"},
+          {"service":"applemusic","isrc":"ES5088303961","artist":"Paloma San Basilio","album":"Las 101 canciones - Cinco décadas de Pop Español","serviceId":"930077977","track":"Juntos"},
+          {"serviceId":"276169923","album":"Marinero de Luces","service":"applemusic","isrc":"ES5028500092","track":"Hoy Quiero Confesarme","artist":"Isabel Pantoja"},
+          {"service":"applemusic","isrc":"ES5027500283","album":"La Copla, Siempre","track":"No Te Vayas de Navarra (Pasodoble)","serviceId":"273921316","artist":"Marifé de Triana"},
+          {"isrc":"ES5117900040","track":"Háblame de Ti","service":"applemusic","serviceId":"283155186","artist":"Pecos","album":"30 Grandes Éxitos y un Par de Corazones"},
+          {"service":"applemusic","serviceId":"274146665","album":"Animales","artist":"Pereza","isrc":"ES5020500059","track":"Princesas"},
+          {"artist":"Los Charros de Luchito y Rafael","isrc":"CLDG21400407","service":"applemusic","track":"Mi Gran Noche","serviceId":"1283366227","album":"A Pasos de Gigante"},
+          {"track":"Livin' la Vida Loca","serviceId":"192821659","album":"Ricky Martin","isrc":"NLB639920005","service":"applemusic","artist":"Ricky Martin"},
+          {"album":"Rocío Dúrcal: Sus 16 Grandes Éxitos","artist":"Rocío Dúrcal","isrc":"MXF019100120","serviceId":"168412220","track":"Me Gustas Mucho","service":"applemusic"},
+          {"track":"Como una Ola","artist":"Rocío Jurado","album":"Los Grandes Exitos: Viva el Amor","service":"applemusic","isrc":"ES5028100144","serviceId":"279848357"},
+          {"artist":"Rosa López","isrc":"ES5020200286","album":"Rosa","serviceId":"478019634","service":"applemusic","track":"Europe's Livíng a Celebration (Versión Cibeles)"},
+          {"serviceId":"164159729","artist":"Rosario","track":"Muchas Flores","service":"applemusic","album":"Muchas Flores","isrc":"ES5110103389"},
+          {"track":"Chiquilla","service":"applemusic","artist":"Seguridad Social","serviceId":"42231361","isrc":"ES5019150000","album":"Grandes Exitos (Gracias Por las Molestias)"},
+          {"isrc":"USSD11600217","artist":"Carlos Vives & Shakira","album":"La Bicicleta (Remix) [feat. Maluma] - Single","service":"applemusic","track":"La Bicicleta (Remix) [feat. Maluma]","serviceId":"1145210128"},
+          {"artist":"Bizarrap & Shakira","serviceId":"1731060236","isrc":"UYB282301031","album":"Las Mujeres Ya No Lloran","service":"applemusic","track":"Shakira: Bzrp Music Sessions, Vol. 53"},
+          {"serviceId":"255617963","service":"applemusic","track":"A Mi Manera","isrc":"ES6020100007","album":"10 Años Juntos","artist":"Siempre Así"},
+          {"serviceId":"1443746027","service":"applemusic","artist":"Sonia y Selena","album":"Yo Quiero Bailar","isrc":"ES6010200113","track":"Yo Quiero Bailar"},
+          {"serviceId":"1443555265","artist":"Tamara","album":"Gracias (Edited Version)","service":"applemusic","isrc":"ES5709904790","track":"Si Nos Dejan"},
+          {"service":"applemusic","album":"El baile del pañuelo","serviceId":"1695162826","track":"No cambié (feat. Tamara)","isrc":"ESA011221717","artist":"Leonardo Dantés"},
+          {"service":"applemusic","isrc":"ES5022202466","track":"Nochentera","serviceId":"1650898131","artist":"Vicco","album":"Nochentera - Single"},
+          {"service":"applemusic","isrc":"USJE61710439","serviceId":"1315218782","track":"Tractor Amarillo","album":"Ponti \"Country\" La Pared","artist":"Zapato Veloz"},
+          {"track":"Pena, Penita Pena","artist":"Lola Flores","service":"applemusic","serviceId":"162276609","isrc":"ES5378900031","album":"Exitos, Vol.1"},
+          {"isrc":"USA371225048","album":"Lola Flores - Sus 100 Mejores Canciones","artist":"Lola Flores","service":"applemusic","serviceId":"427245793","track":"La Zarzamora"},
+          {"service":"applemusic","isrc":"ES5119000008","album":"Mucho Ázucar - Grandes Éxitos","track":"Bandido","serviceId":"290883355","artist":"Azúcar Moreno"},
+          {"isrc":"ES5018572005","track":"Devuélveme a Mi Chica","service":"applemusic","artist":"Hombres G","serviceId":"979321016","album":"Hombres G (Edición 30 Aniversario)"},
+          {"service":"applemusic","artist":"Georgie Dann","album":"El Negro No Puede (Remasterizado)","track":"El Negro No Puede (Remasterizado)","serviceId":"1471952239","isrc":"ES5021901033"},
+          {"artist":"Lolita","service":"applemusic","track":"Sarandonga","serviceId":"257203793","album":"Lola Lolita Lola","isrc":"ES5150154002"},
+          {"serviceId":"379425107","track":"Dueña De Mis Ojos","isrc":"USA561002405","service":"applemusic","artist":"Marcos Llunas","album":"Me Gusta"},
+          {"service":"applemusic","album":"Fiesta Carnaval / Digital Compilation","isrc":"ES7580502207","serviceId":"213875886","track":"El Baile de los Pajaritos","artist":"Maria Jesus y Su Acordeon"},
+          {"album":"VAGABUNDO - Single","track":"VAGABUNDO","service":"applemusic","artist":"Sebastián Yatra, Manuel Turizo & Beéle","isrc":"USUM72305982","serviceId":"1686245995"},
+          {"album":"La Voz de Oro","service":"applemusic","serviceId":"255688927","artist":"Joselito","isrc":"ES5029800715","track":"Campanera"},
+          {"artist":"Antonio Molina","serviceId":"282320272","track":"Cocinero Cocinero","album":"Grabaciones Discos Pizarra: Antonio Molina","service":"applemusic","isrc":"ES5300205733"},
+          {"serviceId":"19468968","artist":"Juan Luis Guerra 4.40","track":"Burbujas de Amor","isrc":"USKP10400047","service":"applemusic","album":"Bachata Rosa"},
+          {"album":"Orígenes","artist":"Massiel","serviceId":"1344881200","isrc":"ES5100300048","service":"applemusic","track":"La, La, La"},
+          {"artist":"CantaJuego","service":"applemusic","album":"CantaJuego, Vol. 1","isrc":"ES5021400057","track":"Susanita Tiene un Ratón","serviceId":"826892125"},
+          {"isrc":"ES5021400050","album":"CantaJuego, Vol. 1","service":"applemusic","track":"Coco en Su Río","serviceId":"826892118","artist":"CantaJuego"},
+          {"serviceId":"1158274341","album":"Ave Fénix","track":"Escándalo","artist":"Raphael","service":"applemusic","isrc":"NLB639210006"},
+          {"album":"Quevedo: Bzrp Music Sessions, Vol. 52 - Single","track":"Quevedo: Bzrp Music Sessions, Vol. 52","artist":"Bizarrap & Quevedo","service":"applemusic","serviceId":"1632746802","isrc":"UYB282201028"},
+          {"service":"applemusic","isrc":"ITM000102377","artist":"Raffaella Carrà","album":"JOY","serviceId":"1613335113","track":"Hay Que Venir Al Sur (Tanti Auguri)"}
+        ],
+        "serviceId" : "pl.u-Z6xlF0VjKox",
+        "name" : "Bingo Musical VDR",
+        "service" : "applemusic",
+        "snapshotId" : null
+      }
+    ]
+  </script>
+</div>
+
+<script>
+  // ========= util =========
+  const APPLE_BASE = "https://music.apple.com/es/song/";
+  const YT_URL = "https://youtu.be/fFymS4MOzW0?si=HHfD8zbTIdWuHcXm";
+
+  const el = id => document.getElementById(id);
+  const ballNum = el('ballNum'), songTitle = el('songTitle'), songArtist = el('songArtist'), songLinks = el('songLinks');
+  const drawnList = el('drawnList'), pendingList = el('pendingList');
+  const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbShowBall = el('cbShowBall'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen');
+  const loadBtn = el('loadBtn'), useScriptBtn = el('useScriptBtn'), jsonInput = el('jsonInput'), statusMsg = el('statusMsg');
+  const loaderBox = el('loaderBox'); const toggleLoaderBtn = el('toggleLoader');
+  const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
+
+  const genBtn = el('genBtn'), qtyInput = el('qty');
+
+  let tracks = [];           // normalizados
+  let order = [];            // índices restantes (para no repetir)
+  let drawn = [];            // objetos ya salidos
+  let popupTab = null;       // referencia a la pestaña secundaria reutilizable
+
+  // Beep "clásico" bingo
+  let audioCtx;
+  function bingoBeep(){
+    if(!cbSound.checked) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(620, audioCtx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(420, audioCtx.currentTime + 0.15);
+      g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
+      o.connect(g).connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + 0.32);
+    }catch(e){}
+  }
+
+  function normalizeInput(json){
+    let raw;
+    if(Array.isArray(json)){
+      if(json.length && json[0] && Array.isArray(json[0].tracks)) raw = json[0].tracks;
+      else raw = json;
+    } else if(json && Array.isArray(json.tracks)) raw = json.tracks;
+    else throw new Error("Estructura JSON no reconocida. Debe ser un array de pistas o un objeto con 'tracks'.");
+
+    const norm = raw.map((t, i) => {
+      const title = t.title || t.track || "—";
+      const artist = t.artist || "—";
+      const album = t.album || "";
+      const service = t.service || "applemusic";
+      const serviceId = (t.serviceId ?? "").toString();
+      let url = t.apple_url || t.url || "";
+      if(!url){
+        if(service === 'applemusic' && serviceId) url = APPLE_BASE + serviceId;
+      }
+      return { title, artist, album, isrc: t.isrc || "", service, serviceId, url, _origIndex:i };
+    });
+
+    return norm;
+  }
+
+  function insertYoutubeAtPosition24(arr){
+    const idx = 23; // 0-based => posición 24
+    const videoId = (YT_URL.match(/(?:v=|\.be\/)([\w-]{11})/)||[])[1] || "fFymS4MOzW0";
+    const ytItem = {
+      title: "Pasadoble Valdemoro del Rey",
+      artist: "Rosario Torres",
+      album: "",
+      isrc: "",
+      service: "youtube",
+      serviceId: videoId,
+      url: YT_URL,
+      _origIndex: "yt"
+    };
+    const out = arr.slice();
+    if(out.length >= idx){
+      out.splice(idx, 0, ytItem);
+    } else {
+      out.push(ytItem);
+    }
+    return out;
+  }
+
+  function resetState(newTracks){
+    tracks = newTracks;
+    order = Array.from({length: tracks.length}, (_,i)=>i);
+    drawn = [];
+    updateUI();
+    setCurrent(); // limpia la ficha actual
+  }
+
+  function setCurrent(item=null, index=null){
+    ballNum.style.visibility = cbShowBall.checked ? 'visible' : 'hidden';
+    if(!item){
+      ballNum.textContent = "–";
+      songTitle.textContent = "—";
+      songArtist.textContent = "—";
+      songLinks.innerHTML = "";
+      return;
+    }
+    const ballNumber = index + 1;
+    ballNum.textContent = ballNumber;
+
+    songTitle.textContent = item.title || "—";
+    songArtist.textContent = item.artist || "—";
+
+    const links = [];
+    if(item.service === 'applemusic' && (item.url || item.serviceId)){
+      const href = item.url || (APPLE_BASE + item.serviceId);
+      links.push(renderAppleLink(href));
+    } else if(item.service === 'youtube' && item.url){
+      links.push(renderYouTubeLink(item.url));
+    }
+    songLinks.innerHTML = links.join("");
+  }
+
+  function renderAppleLink(href){
+    return `<a class="linkIcon apple open" href="${href}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.365 1.43c0 1.14-.46 2.22-1.21 3.02-.77.83-2.04 1.48-3.13 1.48-.06-1.16.49-2.3 1.22-3.06.78-.81 2.11-1.43 3.12-1.44.02 0 .02 0 .02 0zM20.8 17.44c-.59 1.36-.88 1.95-1.65 3.15-1.07 1.64-2.58 3.69-4.45 3.71-1.67.02-2.1-1.09-4.37-1.08-2.27.01-2.75 1.09-4.43 1.07-1.87-.02-3.29-1.86-4.36-3.49C.1 18.55-1.58 13.56 1 9.83c1.19-1.83 3.31-2.99 5.62-3.02 1.76-.03 3.43 1.2 4.37 1.2.92 0 2.98-1.49 5.02-1.27.86.04 3.28.35 4.83 2.63-4.2 2.32-3.52 8.36-.04 8.07z"/></svg>
+      <span>Abrir en Apple Music</span>
+    </a>`;
+  }
+
+  function renderYouTubeLink(href){
+    return `<a class="linkIcon yt open" href="${href}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.5 6.2a4.8 4.8 0 0 0-.8-2.1 3.2 3.2 0 0 0-2.2-1.2C17.9 2.5 12 2.5 12 2.5s-5.9 0-8.5.4A3.2 3.2 0 0 0 1.3 4a4.8 4.8 0 0 0-.8 2.1A35.1 35.1 0 0 0 0 12c0 1.9.1 3.8.5 5.8.1.8.3 1.5.8 2.1.5.6 1.3 1 2.2 1.1C6.1 21.5 12 21.5 12 21.5s5.9 0 8.5-.4a3.2 3.2 0 0 0 2.2-1.1c.5-.6.7-1.3.8-2.1.4-2 .5-3.9.5-5.8 0-1.9-.1-3.8-.5-5.8zM9.6 15.5V8.5l6.4 3.5-6.4 3.5z"/></svg>
+      <span>Abrir en YouTube</span>
+    </a>`;
+  }
+
+  function updateUI(){
+    // Contadores
+    countTotal.textContent = tracks.length;
+    countDrawn.textContent = drawn.length;
+    countPending.textContent = order.length;
+
+    // Listas
+    drawnList.innerHTML = drawn.map(d => pill(d.item, d.index, true)).join("");
+    const remaining = order.map(i => pill(tracks[i], i, false)).join("");
+    pendingList.innerHTML = remaining;
+
+    // Enlaces en listas -> abrir en pestaña secundaria reutilizable
+    document.querySelectorAll('.pill a.open').forEach(a=>{
+      a.addEventListener('click', (ev)=>{
+        ev.preventDefault();
+        openInSideTab(a.href);
+      }, {passive:false});
+    });
+  }
+
+  function pill(item, index, used){
+    const n = index + 1;
+    const href = item.service === 'youtube'
+      ? (item.url || '')
+      : (item.url || (item.serviceId ? APPLE_BASE + item.serviceId : ''));
+    const icon = item.service==='youtube'
+      ? '▶︎'
+      : '';
+    const serviceLabel = item.service==='youtube' ? 'YouTube' : 'Apple Music';
+    return `<div class="pill ${used?'used':''}">
+      <span><strong>#${n}</strong> · ${escapeHtml(item.title)} <small>· ${escapeHtml(item.artist||'')}</small></span>
+      ${href ? `<a class="open" href="${href}" title="Abrir en ${serviceLabel}">${icon}</a>`:''}
+    </div>`;
+  }
+
+  function escapeHtml(s){return (s??'').toString().replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}
+
+  function drawOne(){
+    if(order.length===0){status("No quedan bolas. ¡Bingo completo!"); return;}
+    const r = Math.floor(Math.random()*order.length);
+    const idx = order.splice(r,1)[0];
+    const item = tracks[idx];
+    drawn.push({item, index: idx});
+    setCurrent(item, idx);
+    updateUI();
+    bingoBeep();
+    status("");
+
+    if(cbAutoOpen.checked){
+      // construye URL
+      const href = item.service==='youtube'
+        ? (item.url || '')
+        : (item.url || (item.serviceId ? APPLE_BASE + item.serviceId : ''));
+      if(href) openInSideTab(href, true);
+    }
+  }
+
+  function resetAll(){
+    order = Array.from({length: tracks.length}, (_,i)=>i);
+    drawn = [];
+    setCurrent();
+    updateUI();
+    status("Reiniciado.");
+  }
+
+  function status(msg){ statusMsg.textContent = msg; }
+
+  // ========= apertura en pestaña secundaria única =========
+  function openInSideTab(href, tryAutoplay=false){
+    // Reutiliza una única pestaña secundaria
+    try{
+      if(!popupTab || popupTab.closed){
+        popupTab = window.open(href, 'bingoPlayer');
+      }else{
+        popupTab.location.href = href;
+      }
+      // No forzamos focus a la pestaña secundaria
+      // Intento de autoplay (limitado por navegador)
+      if(tryAutoplay){
+        // Para YouTube se puede añadir ?autoplay=1 si no lo trae
+        if(/youtube\.com|youtu\.be/.test(href) && !/[?&]autoplay=1/.test(href)){
+          const sep = href.includes('?') ? '&' : '?';
+          popupTab.location.href = href + sep + 'autoplay=1';
+        }
+        // Apple Music web no permite un autoplay fiable por política,
+        // pero abrir desde un gesto de usuario suele permitir reproducción.
+      }
+    }catch(e){
+      console.warn('Bloqueado por el navegador o error al abrir la pestaña:', e);
+      // fallback: abre en nueva pestaña normal
+      window.open(href, '_blank', 'noopener');
+    }
+  }
+
+  // ========= carga JSON =========
+  function loadFromTextarea(){
+    try{
+      const json = JSON.parse(jsonInput.value.trim());
+      const norm = normalizeInput(json);
+      const withYT = insertYoutubeAtPosition24(norm).map(fixLink);
+      resetState(withYT);
+      status(`Cargadas ${withYT.length} pistas.`);
+    }catch(e){
+      status("Error al cargar JSON: " + e.message);
+    }
+  }
+
+  function loadFromScriptTag(){
+    try{
+      const raw = el('initialJson').textContent.trim();
+      if(!raw) throw new Error("El <script id='initialJson'> está vacío.");
+      const json = JSON.parse(raw);
+      const norm = normalizeInput(json);
+      const withYT = insertYoutubeAtPosition24(norm).map(fixLink);
+      resetState(withYT);
+      status(`Cargadas ${withYT.length} pistas desde el script embebido.`);
+    }catch(e){
+      status("Error al cargar JSON embebido: " + e.message);
+    }
+  }
+
+  function fixLink(t){
+    if(t.service==='applemusic'){
+      t.url = t.url || (t.serviceId ? (APPLE_BASE + t.serviceId) : "");
+    }
+    return t;
+  }
+
+  // ========= eventos =========
+  drawBtn.addEventListener('click', drawOne);
+  resetBtn.addEventListener('click', resetAll);
+  cbShowBall.addEventListener('change', ()=>{ ballNum.style.visibility = cbShowBall.checked ? 'visible' : 'hidden'; });
+  loadBtn.addEventListener('click', loadFromTextarea);
+  useScriptBtn.addEventListener('click', loadFromScriptTag);
+  toggleLoaderBtn.addEventListener('click', ()=>{
+    loaderBox.open = !loaderBox.open;
+    toggleLoaderBtn.textContent = loaderBox.open ? 'Ocultar panel' : 'Mostrar panel';
+  });
+  
+  // ========= Generar cartones =========
+  genBtn.addEventListener('click', ()=>{
+    try{
+      if(!tracks.length){
+        alert('Primero carga una lista de canciones.');
+        return;
+      }
+      let qty = qtyInput.valueAsNumber;              // número nativo
+      if(!Number.isFinite(qty)) qty = 40;            // fallback
+      qty = Math.round(qty);                          // por si meten decimales
+      qty = Math.max(2, Math.min(100, qty));          // límites
+      if (qty % 2 !== 0) qty += 1;                    // 2 cartones por página ⇒ que sea par
+      generateCardsPDF(tracks, qty);
+    }catch(e){
+      console.error(e);
+      alert('No se pudo generar el PDF: ' + e.message);
+    }
+  });
+
+
+  // ========= arranque =========
+  setCurrent(); // placeholder inicial
+  // Si quieres cargar automáticamente el embebido al abrir:
+  loadFromScriptTag();
+  
+  // ========= PDF helpers =========
+async function ensureJsPDF(){
+  if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+  // Si el <script> CDN ya está en el DOM, esperamos a que cargue
+  await new Promise(r => setTimeout(r, 50));
+  if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+  throw new Error('jsPDF no está disponible. Asegúrate de incluir el script CDN antes.');
+}
+
+// Util: mezcla in-place
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// Devuelve "Artista – Título"
+function labelForBall(tracks, ballNum){
+  const idx = ballNum - 1;
+  const t = tracks[idx] || {};
+  const artist = (t.artist || "—").toString();
+  const title  = (t.title  || t.track || "—").toString();
+  return `${artist} – ${title}`;
+}
+
+// Dibuja un cartón 4×2 (8 casillas) en (x,y) con borde externo
+function drawCard(doc, tracks, cardNumber, numbers, x, y, opts={}){
+  const {
+    cardWidth=180, cardHeight=130, // cartón ocupa ~mitad A4 (con márgenes)
+    headerH=12,
+    gridPadding=8,
+    bigNumberSize=22,
+    textSize=8,
+    lineGap=2,
+    radius=2
+  } = opts;
+
+  // Marco del cartón (borde exterior del cartón)
+  doc.setDrawColor(20);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(x, y, cardWidth, cardHeight, radius, radius);
+
+  // Cabecera
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(12);
+  const title = `Bingo Musical Valdemoro del Rey  —  Cartón #${String(cardNumber).padStart(2,'0')}`;
+  doc.text(title, x + cardWidth/2, y + 7, {align:"center", baseline:"middle"});
+
+  // Área de cuadrícula (con borde externo alrededor del bloque 4×2)
+  const gridX = x + gridPadding;
+  const gridY = y + headerH + gridPadding;
+  const gridW = cardWidth  - gridPadding*2;
+  const gridH = cardHeight - headerH - gridPadding*2;
+
+  // Borde externo de la cuadrícula 4×2
+  doc.setLineWidth(0.5);
+  doc.roundedRect(gridX, gridY, gridW, gridH, 1.5, 1.5);
+
+  const cols = 4, rows = 2;
+  const cellW = gridW / cols;
+  const cellH = gridH / rows;
+
+  // Líneas internas de la cuadrícula
+  for(let c=1;c<cols;c++){
+    const cx = gridX + c*cellW;
+    doc.line(cx, gridY, cx, gridY+gridH);
+  }
+  for(let r=1;r<rows;r++){
+    const cy = gridY + r*cellH;
+    doc.line(gridX, cy, gridX+gridW, cy);
+  }
+
+  // Contenido de cada casilla
+  doc.setFont("helvetica","bold");
+  doc.setTextColor(0);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const i = r*cols + c;
+      const n = numbers[i];
+      const cx = gridX + c*cellW;
+      const cy = gridY + r*cellH;
+
+      // Número grande centrado arriba
+      doc.setFontSize(bigNumberSize);
+      doc.text(String(n), cx + cellW/2, cy + 9, {align:"center"});
+
+      // Texto “Artista – Título”, autoajustado dentro de la celda
+      const label = labelForBall(tracks, n);
+      doc.setFont("helvetica","normal");
+      doc.setFontSize(textSize);
+
+      // Deja margen interno y espacio bajo el número
+      const textTop   = cy + 9 + 6;           // 6 mm debajo del número
+      const textLeft  = cx + 2.5;
+      const textWidth = cellW - 5;            // márgenes laterales
+      const wrapped = doc.splitTextToSize(label, textWidth);
+
+      // Como máximo 3 líneas; si sobra, recortar con “…” en la última
+      let lines = wrapped.slice(0,3);
+      if(wrapped.length > 3){
+        const last = lines[2];
+        // recorta última línea para añadir “…” si hace falta
+        const ell = '…';
+        let cut = last;
+        while(doc.getTextWidth(cut + ell) > textWidth && cut.length>0){
+          cut = cut.slice(0, -1);
+        }
+        lines[2] = cut + ell;
+      }
+
+      let ty = textTop;
+      lines.forEach(line=>{
+        doc.text(line, textLeft, ty);
+        ty += textSize*0.3527 + lineGap; // convertir pt aprox a mm + gap
+      });
+
+      // Restaurar para el siguiente número
+      doc.setFont("helvetica","bold");
+    }
+  }
+}
+
+// Genera los cartones en PDF con el 24 en posición aleatoria de cada cartón
+async function generateCardsPDF(tracks, qty){
+  // jsPDF en mm, A4 vertical
+  const jsPDF = await ensureJsPDF();
+
+  const doc = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  // Posiciones para 2 cartones por página (uno encima de otro)
+  // Manteniendo márgenes agradables y cartón de ~180×130mm (encaja bien en A4)
+  const marginX = (pageW - 180) / 2;   // centrado horizontal
+  const topY    = 12;                  // cartón superior
+  const bottomY = pageH - 12 - 130;    // cartón inferior
+
+  // Universo de bolas = longitud de tracks (1-based). Asegura que existe índice 24.
+  const totalBalls = tracks.length;
+  if(totalBalls < 24) throw new Error('La lista debe tener al menos 24 canciones.');
+
+  // Índices disponibles EXCLUYENDO el 24 (1-based)
+  const pool = [];
+  for(let n=1;n<=totalBalls;n++){ if(n!==24) pool.push(n); }
+
+  // Generar todos los cartones
+  let cardNo = 1;
+  for(let i=0;i<qty;i++){
+    // Selecciona 7 números distintos del pool y añade 24, luego baraja → 24 queda en posición aleatoria
+    const poolCopy = pool.slice();
+    shuffle(poolCopy);
+    const pick = poolCopy.slice(0,7);
+    pick.push(24);
+    shuffle(pick);
+
+    // Dibuja en página (dos cartones por página)
+    const isTop = (i%2===0);
+    const posY  = isTop ? topY : bottomY;
+
+    drawCard(doc, tracks, cardNo, pick, marginX, posY);
+
+    // Nueva página tras dibujar el segundo cartón
+    if(!isTop && i<qty-1){
+      doc.addPage();
+    }
+    cardNo++;
+  }
+
+  doc.save('Cartones_Bingo_Musical_Valdemoro_del_Rey.pdf');
+}
+</script>
+</body>
+</html>
