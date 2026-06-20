@@ -265,7 +265,7 @@ main {
 
 /* FREE cell */
 .card-cell.free {
-  background: linear-gradient(135deg, #c084fc55, #818cf855);
+  background: linear-gradient(135deg, rgba(192,132,252,.33), rgba(129,140,248,.33));
   color: var(--accent);
   font-size: .7rem;
   font-weight: 800;
