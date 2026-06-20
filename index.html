@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bingo Musical VDR</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- ── HEADER ───────────────────────────────────── -->
+    <header>
+      <h1>🎵 Bingo Musical VDR 🎵</h1>
+      <div class="header-controls">
+        <button id="btn-draw" class="btn btn-primary">🎱 Sacar Bola</button>
+        <button id="btn-new"  class="btn btn-secondary">🔄 Nueva Partida</button>
+        <button id="btn-mute" class="btn btn-icon" title="Silenciar / Activar sonido">🔊</button>
+      </div>
+    </header>
+
+    <!-- ── MAIN ─────────────────────────────────────── -->
+    <main>
+
+      <!-- Current ball -->
+      <section class="panel panel-ball">
+        <h2>Bola actual</h2>
+        <div id="current-ball" class="ball-display">
+          <div class="ball ball-empty">
+            <span class="ball-letter">?</span>
+            <span class="ball-number">--</span>
+          </div>
+          <p id="song-name" class="song-name">Pulsa «Sacar Bola» para empezar</p>
+        </div>
+        <div class="counter">
+          Bolas sacadas: <span id="draw-count">0</span> / 75
+        </div>
+      </section>
+
+      <!-- Player card -->
+      <section class="panel panel-card">
+        <h2>Tu cartón</h2>
+        <div class="card-wrapper">
+          <div class="card-header">
+            <span class="col-b">B</span>
+            <span class="col-i">I</span>
+            <span class="col-n">N</span>
+            <span class="col-g">G</span>
+            <span class="col-o">O</span>
+          </div>
+          <div id="bingo-card" class="bingo-card"></div>
+        </div>
+      </section>
+
+      <!-- Drawn balls -->
+      <section class="panel panel-drawn">
+        <h2>Bolas sacadas</h2>
+        <div id="drawn-balls" class="drawn-balls"></div>
+      </section>
+
+    </main>
+
+    <!-- ── WIN OVERLAY ──────────────────────────────── -->
+    <div id="win-overlay" class="win-overlay hidden">
+      <div class="win-box">
+        <div class="win-emoji">🎉</div>
+        <h2>¡BINGO!</h2>
+        <p>¡Enhorabuena! Has ganado.</p>
+        <button id="btn-close-win" class="btn btn-primary">Jugar de nuevo</button>
+      </div>
+    </div>
+
+  </div><!-- /#app -->
+
+  <script src="app.js"></script>
+</body>
+</html>
