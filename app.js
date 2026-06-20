@@ -306,10 +306,7 @@ function generateCard() {
 }
 
 function colOfNumber(num) {
-  for (const [letter, [min, max]] of Object.entries(RANGES)) {
-    if (num >= min && num <= max) return letter;
-  }
-  return '';
+  return COLS[Math.floor((num - 1) / 15)];
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -369,31 +366,17 @@ function renderCard() {
   }
 }
 
-function markNumberOnCard(num) {
-  let found = false;
+function markAndRenderNumber(num) {
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
       if (card[r][c].num === num) {
         card[r][c].marked = true;
-        found = true;
-        break;
+        const cell = document.querySelector(`.card-cell[data-row="${r}"][data-col="${c}"]`);
+        if (cell) cell.classList.add('marked');
+        return;
       }
     }
-    if (found) break;
   }
-}
-
-function updateCardCells(num) {
-  const cells = document.querySelectorAll('.card-cell');
-  cells.forEach(cell => {
-    const r = +cell.dataset.row;
-    const c = +cell.dataset.col;
-    const cd = card[r][c];
-    if (cd.free) return;
-    if (cd.num === num) {
-      cell.classList.add('marked');
-    }
-  });
 }
 
 function highlightWinners(positions) {
@@ -434,6 +417,81 @@ function renderMiniball(num) {
 // ─────────────────────────────────────────────────────────────────────────
 //  GAME ACTIONS
 // ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────
+//  LOCALSTORAGE PERSISTENCE
+// ─────────────────────────────────────────────────────────────────────────
+const SAVE_KEY = 'vdr-bingo-state';
+
+function saveState() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      bag, drawn, card, gameOver,
+      lastBall: drawn.length > 0 ? drawn[drawn.length - 1] : null
+    }));
+  } catch (_) { /* ignore quota errors */ }
+}
+
+function clearState() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s.card || !s.bag || !s.drawn) return false;
+    bag      = s.bag;
+    drawn    = s.drawn;
+    card     = s.card;
+    gameOver = s.gameOver || false;
+
+    // Rebuild UI from restored state
+    $('draw-count').textContent = drawn.length;
+    $('drawn-balls').innerHTML  = '';
+    $('win-overlay').classList.add('hidden');
+    renderCard();
+
+    // Re-render each drawn mini-ball (oldest first → newest on top)
+    [...drawn].reverse().forEach(num => renderMiniball(num));
+
+    // Show the last drawn ball, if any
+    if (s.lastBall) {
+      renderCurrentBall(s.lastBall);
+    }
+
+    if (gameOver) {
+      const win = checkWin();
+      if (win) highlightWinners(win);
+    }
+
+    $('btn-draw').disabled = bag.length === 0 || gameOver;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  WEB SPEECH API
+// ─────────────────────────────────────────────────────────────────────────
+let speaking = true; // enabled by default
+
+function announceBall(num) {
+  if (!speaking || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel(); // interrupt any previous utterance
+  const col = colOfNumber(num);
+  const mel = MELODIES[num];
+  const text = mel ? `${col} ${num}. ${mel.name}` : `${col} ${num}`;
+  const utt  = new SpeechSynthesisUtterance(text);
+  utt.lang   = 'es-ES';
+  utt.rate   = 0.9;
+  window.speechSynthesis.speak(utt);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  GAME ACTIONS
+// ─────────────────────────────────────────────────────────────────────────
 function drawBall() {
   if (gameOver || bag.length === 0) return;
 
@@ -445,9 +503,9 @@ function drawBall() {
   renderCurrentBall(num);
   renderMiniball(num);
   playBallMelody(num);
+  announceBall(num);
 
-  markNumberOnCard(num);
-  updateCardCells(num);
+  markAndRenderNumber(num);
 
   const win = checkWin();
   if (win) {
@@ -460,13 +518,22 @@ function drawBall() {
   }
 
   $('btn-draw').disabled = bag.length === 0 || gameOver;
+  saveState();
 }
 
 function newGame() {
+  // Confirm if a game is already in progress
+  if (drawn.length > 0 && !gameOver) {
+    if (!confirm('¿Seguro que quieres empezar una nueva partida? Se perderá la partida actual.')) {
+      return;
+    }
+  }
+
   gameOver = false;
   drawn = [];
   generateBag();
   generateCard();
+  clearState();
 
   // Reset UI
   $('draw-count').textContent = '0';
@@ -501,6 +568,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Start a new game immediately
-  newGame();
+  $('btn-speak').addEventListener('click', () => {
+    speaking = !speaking;
+    $('btn-speak').textContent = speaking ? '🔈' : '🔕';
+    $('btn-speak').title = speaking ? 'Cantar bola (activo)' : 'Cantar bola (silenciado)';
+    if (!speaking && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  });
+
+  // Restore saved game or start fresh
+  if (!loadState()) {
+    newGame();
+  }
 });
+

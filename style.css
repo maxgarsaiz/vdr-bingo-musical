@@ -272,17 +272,6 @@ main {
   letter-spacing: .05em;
 }
 
-/* Drawn but not yet marked (available) */
-.card-cell.available {
-  background: rgba(255,255,255,.15);
-  border-color: rgba(255,255,255,.5);
-  animation: pulse-available 1s ease-in-out 3;
-}
-@keyframes pulse-available {
-  0%,100% { box-shadow: none; }
-  50%      { box-shadow: 0 0 12px 2px rgba(255,255,255,.4); }
-}
-
 /* Marked */
 .card-cell.marked {
   color: #fff;
