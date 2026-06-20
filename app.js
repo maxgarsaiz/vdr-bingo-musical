@@ -188,6 +188,8 @@ const MELODIES = {
 // ─────────────────────────────────────────────────────────────────────────
 //  AUDIO ENGINE
 // ─────────────────────────────────────────────────────────────────────────
+const MASTER_GAIN = 0.45; // master volume for all musical sound effects
+
 let audioCtx  = null;
 let masterGain = null;
 let muted = false;
@@ -196,7 +198,7 @@ function initAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.45;
+    masterGain.gain.value = MASTER_GAIN;
     masterGain.connect(audioCtx.destination);
   }
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -477,10 +479,12 @@ function loadState() {
 // ─────────────────────────────────────────────────────────────────────────
 //  WEB SPEECH API
 // ─────────────────────────────────────────────────────────────────────────
-const SPEECH_LANG = 'es-ES';
-const SPEECH_RATE = 0.9;
+const SPEECH_LANG          = 'es-ES';
+const SPEECH_SYNTHESIS_RATE = 0.9;
 
-let speechEnabled = true; // enabled by default
+// speechEnabled controls voice ball announcements (Web Speech API).
+// muted controls musical sound effects (Web Audio API). They are independent.
+let speechEnabled = true;
 
 function announceBall(num) {
   if (!speechEnabled || !window.speechSynthesis) return;
@@ -490,7 +494,7 @@ function announceBall(num) {
   const text = mel ? `${col} ${num}. ${mel.name}` : `${col} ${num}`;
   const utt  = new SpeechSynthesisUtterance(text);
   utt.lang   = SPEECH_LANG;
-  utt.rate   = SPEECH_RATE;
+  utt.rate   = SPEECH_SYNTHESIS_RATE;
   window.speechSynthesis.speak(utt);
 }
 
@@ -569,7 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
     muted = !muted;
     $('btn-mute').textContent = muted ? '🔇' : '🔊';
     if (audioCtx && masterGain) {
-      masterGain.gain.value = muted ? 0 : 0.45;
+      masterGain.gain.value = muted ? 0 : MASTER_GAIN;
     }
   });
 
