@@ -98,7 +98,6 @@
       <button id="drawBtn" class="btn primary">Sacar bola <span class="shortcut-hint">[Espacio]</span></button>
       <button id="validateBtn" class="btn">Validar boleto</button>
       <button id="resetBtn" class="btn">Reiniciar</button>
-      <label class="toggle"><input type="checkbox" id="cbShowBall" checked> Mostrar nº de bola</label>
       <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbAutoOpen" checked> Abrir enlace al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
@@ -304,7 +303,7 @@
   const el = id => document.getElementById(id);
   const ballNum = el('ballNum'), songTitle = el('songTitle'), songArtist = el('songArtist'), songLinks = el('songLinks');
   const drawnList = el('drawnList'), pendingList = el('pendingList');
-  const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbShowBall = el('cbShowBall'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen'), cbEmbed = el('cbEmbed');
+  const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen'), cbEmbed = el('cbEmbed');
   const loadBtn = el('loadBtn'), useScriptBtn = el('useScriptBtn'), jsonInput = el('jsonInput'), statusMsg = el('statusMsg');
   const loaderBox = el('loaderBox');
   const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
@@ -432,7 +431,7 @@
   }
 
   function setCurrent(item=null, index=null){
-    ballNum.style.visibility = cbShowBall.checked ? 'visible' : 'hidden';
+    ballNum.style.visibility = 'visible';
     if(!item){
       ballNum.textContent = "–";
       songTitle.textContent = "—";
@@ -653,7 +652,6 @@
   // ========= eventos =========
   drawBtn.addEventListener('click', drawOne);
   resetBtn.addEventListener('click', resetAll);
-  cbShowBall.addEventListener('change', ()=>{ ballNum.style.visibility = cbShowBall.checked ? 'visible' : 'hidden'; });
   cbEmbed.addEventListener('change', ()=>{
     const last = drawn.length ? drawn[drawn.length-1] : null;
     updatePlayer(last ? last.item : null);
