@@ -66,6 +66,26 @@
   .result{margin-top:12px; font-size:14px}
   .result.ok{color:var(--ok)}
   .result.err{color:var(--danger)}
+
+  /* ===== Animación de bola ===== */
+  @keyframes ballPop{
+    0%{transform:scale(1)}
+    40%{transform:scale(1.3)}
+    70%{transform:scale(.92)}
+    100%{transform:scale(1)}
+  }
+  .ball.pop{animation:ballPop .45s cubic-bezier(.36,.07,.19,.97) both}
+
+  /* ===== Hint atajo teclado ===== */
+  .shortcut-hint{font-size:11px;opacity:.55;font-weight:400;margin-left:4px}
+
+  /* ===== Bola actual destacada en la lista ===== */
+  .pill.current{border-color:var(--accent);background:#0a2535;opacity:1!important;box-shadow:0 0 0 1px var(--accent) inset}
+
+  /* ===== Reproductor embebido ===== */
+  #playerBox{margin-top:14px;border-radius:10px;overflow:hidden;display:none}
+  #playerBox.visible{display:block}
+  #playerBox iframe{width:100%;border:0;border-radius:10px;display:block}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
@@ -75,12 +95,13 @@
     <h1>🎵 Bingo Musical Valdemoro del Rey</h1>
     <p class="msg" id="statusMsg"></p>
     <div class="controls">
-      <button id="drawBtn" class="btn primary">Sacar bola</button>
+      <button id="drawBtn" class="btn primary">Sacar bola <span class="shortcut-hint">[Espacio]</span></button>
       <button id="validateBtn" class="btn">Validar boleto</button>
       <button id="resetBtn" class="btn">Reiniciar</button>
       <label class="toggle"><input type="checkbox" id="cbShowBall" checked> Mostrar nº de bola</label>
       <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbAutoOpen" checked> Abrir enlace al sacar bola</label>
+      <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
     </div>
   </header>
 
@@ -100,6 +121,7 @@
           <p class="title" id="songTitle">—</p>
           <p class="artist" id="songArtist">—</p>
           <div class="links" id="songLinks"></div>
+          <div id="playerBox"></div>
         </div>
       </div>
     </div>
@@ -282,10 +304,11 @@
   const el = id => document.getElementById(id);
   const ballNum = el('ballNum'), songTitle = el('songTitle'), songArtist = el('songArtist'), songLinks = el('songLinks');
   const drawnList = el('drawnList'), pendingList = el('pendingList');
-  const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbShowBall = el('cbShowBall'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen');
+  const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbShowBall = el('cbShowBall'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen'), cbEmbed = el('cbEmbed');
   const loadBtn = el('loadBtn'), useScriptBtn = el('useScriptBtn'), jsonInput = el('jsonInput'), statusMsg = el('statusMsg');
   const loaderBox = el('loaderBox');
   const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
+  const playerBox = el('playerBox');
 
   const genBtn = el('genBtn'), qtyInput = el('qty');
 
@@ -415,8 +438,15 @@
       songTitle.textContent = "—";
       songArtist.textContent = "—";
       songLinks.innerHTML = "";
+      playerBox.innerHTML = "";
+      playerBox.classList.remove('visible');
       return;
     }
+    // Animación de bola
+    ballNum.classList.remove('pop');
+    void ballNum.offsetWidth; // reflow para reiniciar animación
+    ballNum.classList.add('pop');
+
     const ballNumber = index + 1;
     ballNum.textContent = ballNumber;
 
@@ -431,6 +461,34 @@
       links.push(renderYouTubeLink(item.url));
     }
     songLinks.innerHTML = links.join("");
+
+    updatePlayer(item);
+  }
+
+  function updatePlayer(item=null){
+    if(!cbEmbed || !cbEmbed.checked || !item){
+      playerBox.innerHTML = "";
+      playerBox.classList.remove('visible');
+      return;
+    }
+    // Sanitizar serviceId: solo caracteres alfanuméricos, guiones y guiones bajos
+    const safeId = /^[\w-]+$/.test(item.serviceId || '') ? item.serviceId : '';
+    let iframeSrc = "";
+    let iframeExtra = "";
+    if(item.service === 'applemusic' && safeId){
+      iframeSrc = `https://embed.music.apple.com/es/song/${safeId}`;
+      iframeExtra = `allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" height="175" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"`;
+    } else if(item.service === 'youtube' && safeId){
+      iframeSrc = `https://www.youtube.com/embed/${safeId}?autoplay=1&rel=0`;
+      iframeExtra = `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen height="200"`;
+    }
+    if(iframeSrc){
+      playerBox.innerHTML = `<iframe src="${iframeSrc}" ${iframeExtra}></iframe>`;
+      playerBox.classList.add('visible');
+    } else {
+      playerBox.innerHTML = "";
+      playerBox.classList.remove('visible');
+    }
   }
 
   function renderAppleLink(href){
@@ -453,8 +511,9 @@
     countDrawn.textContent = drawn.length;
     countPending.textContent = order.length;
 
-    // Listas
-    drawnList.innerHTML = drawn.map(d => pill(d.item, d.index, true)).join("");
+    // Lista "Ya salieron": más reciente primero
+    const reversedDrawn = drawn.slice().reverse();
+    drawnList.innerHTML = reversedDrawn.map((d, i) => pill(d.item, d.index, true, i === 0)).join("");
     const remaining = order.map(i => pill(tracks[i], i, false)).join("");
     pendingList.innerHTML = remaining;
 
@@ -467,7 +526,7 @@
     });
   }
 
-  function pill(item, index, used){
+  function pill(item, index, used, current=false){
     const n = index + 1;
     const href = item.service === 'youtube'
       ? (item.url || '')
@@ -476,7 +535,7 @@
       ? '▶︎'
       : '';
     const serviceLabel = item.service==='youtube' ? 'YouTube' : 'Apple Music';
-    return `<div class="pill ${used?'used':''}">
+    return `<div class="pill ${used?'used':''} ${current?'current':''}">
       <span><strong>#${n}</strong> · ${escapeHtml(item.title)} <small>· ${escapeHtml(item.artist||'')}</small></span>
       ${href ? `<a class="open" href="${href}" title="Abrir en ${serviceLabel}">${icon}</a>`:''}
     </div>`;
@@ -595,8 +654,21 @@
   drawBtn.addEventListener('click', drawOne);
   resetBtn.addEventListener('click', resetAll);
   cbShowBall.addEventListener('change', ()=>{ ballNum.style.visibility = cbShowBall.checked ? 'visible' : 'hidden'; });
+  cbEmbed.addEventListener('change', ()=>{
+    const last = drawn.length ? drawn[drawn.length-1] : null;
+    updatePlayer(last ? last.item : null);
+  });
   loadBtn.addEventListener('click', loadFromTextarea);
   useScriptBtn.addEventListener('click', loadFromScriptTag);
+
+  // Atajo de teclado: Espacio para sacar bola (siempre que no se esté en un campo interactivo)
+  document.addEventListener('keydown', (e)=>{
+    const tag = e.target.tagName;
+    if(e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'BUTTON' && tag !== 'SELECT'){
+      e.preventDefault();
+      drawOne();
+    }
+  });
   
   // ========= Generar cartones =========
   genBtn.addEventListener('click', ()=>{
