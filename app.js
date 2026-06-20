@@ -306,7 +306,8 @@ function generateCard() {
 }
 
 function colOfNumber(num) {
-  return COLS[Math.floor((num - 1) / 15)];
+  const idx = Math.floor((num - 1) / 15);
+  return idx >= 0 && idx < COLS.length ? COLS[idx] : '';
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -428,11 +429,11 @@ function saveState() {
       bag, drawn, card, gameOver,
       lastBall: drawn.length > 0 ? drawn[drawn.length - 1] : null
     }));
-  } catch (_) { /* ignore quota errors */ }
+  } catch (err) { console.warn('saveState: could not write to localStorage', err); }
 }
 
 function clearState() {
-  try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+  try { localStorage.removeItem(SAVE_KEY); } catch (err) { console.warn('clearState failed', err); }
 }
 
 function loadState() {
@@ -467,7 +468,8 @@ function loadState() {
 
     $('btn-draw').disabled = bag.length === 0 || gameOver;
     return true;
-  } catch (_) {
+  } catch (err) {
+    console.warn('loadState: could not restore state', err);
     return false;
   }
 }
@@ -475,17 +477,20 @@ function loadState() {
 // ─────────────────────────────────────────────────────────────────────────
 //  WEB SPEECH API
 // ─────────────────────────────────────────────────────────────────────────
-let speaking = true; // enabled by default
+const SPEECH_LANG = 'es-ES';
+const SPEECH_RATE = 0.9;
+
+let speechEnabled = true; // enabled by default
 
 function announceBall(num) {
-  if (!speaking || !window.speechSynthesis) return;
+  if (!speechEnabled || !window.speechSynthesis) return;
   window.speechSynthesis.cancel(); // interrupt any previous utterance
   const col = colOfNumber(num);
   const mel = MELODIES[num];
   const text = mel ? `${col} ${num}. ${mel.name}` : `${col} ${num}`;
   const utt  = new SpeechSynthesisUtterance(text);
-  utt.lang   = 'es-ES';
-  utt.rate   = 0.9;
+  utt.lang   = SPEECH_LANG;
+  utt.rate   = SPEECH_RATE;
   window.speechSynthesis.speak(utt);
 }
 
@@ -569,10 +574,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   $('btn-speak').addEventListener('click', () => {
-    speaking = !speaking;
-    $('btn-speak').textContent = speaking ? '🔈' : '🔕';
-    $('btn-speak').title = speaking ? 'Cantar bola (activo)' : 'Cantar bola (silenciado)';
-    if (!speaking && window.speechSynthesis) {
+    speechEnabled = !speechEnabled;
+    $('btn-speak').textContent = speechEnabled ? '🔈' : '🔕';
+    $('btn-speak').title = speechEnabled ? 'Cantar bola (activo)' : 'Cantar bola (silenciado)';
+    if (!speechEnabled && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
   });
