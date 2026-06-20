@@ -1,0 +1,723 @@
+[
+  {
+    "description" : null,
+    "tracks" : [
+      {
+        "serviceId" : "1690003453",
+        "isrc" : "ESUM72301752",
+        "artist" : "Aitana",
+        "service" : "applemusic",
+        "album" : "LAS BABYS - Single",
+        "track" : "LAS BABYS"
+      },
+      {
+        "serviceId" : "1625189890",
+        "artist" : "Sangiovanni & Aitana",
+        "isrc" : "ITZ042200146",
+        "album" : "mariposas - Single",
+        "service" : "applemusic",
+        "track" : "mariposas"
+      },
+      {
+        "service" : "applemusic",
+        "track" : "GRAN VÍA",
+        "isrc" : "ES03H2400005",
+        "serviceId" : "1780125579",
+        "artist" : "Quevedo & Aitana",
+        "album" : "BUENAS NOCHES"
+      },
+      {
+        "serviceId" : "726347452",
+        "album" : "No Es Pecado (Remastered)",
+        "isrc" : "ES5088602056",
+        "artist" : "Alaska y Dinarama",
+        "track" : "A Quién Le Importa",
+        "service" : "applemusic"
+      },
+      {
+        "artist" : "Alejandro Sanz",
+        "service" : "applemusic",
+        "track" : "Corazón partío",
+        "serviceId" : "478735639",
+        "album" : "Colección definitiva (Super Deluxe iTunes exclusive)",
+        "isrc" : "ES5159706045"
+      },
+      {
+        "album" : "Los Amigos de Mis Amigas Son Mis Amigos",
+        "service" : "applemusic",
+        "track" : "Los Amigos de Mis Amigas Son Mis Amigos",
+        "artist" : "Objetivo Birmania",
+        "serviceId" : "1255652871",
+        "isrc" : "ES5118900095"
+      },
+      {
+        "track" : "La Puerta de Alcalá (feat. Ana Belén)",
+        "album" : "Dual",
+        "artist" : "Aleks Syntek",
+        "service" : "applemusic",
+        "serviceId" : "1299890926",
+        "isrc" : "MXF011700221"
+      },
+      {
+        "isrc" : "ES5118001337",
+        "track" : "No Dudaría",
+        "serviceId" : "284746940",
+        "album" : "Lo Mejor de Antonio",
+        "service" : "applemusic",
+        "artist" : "Antonio Flores"
+      },
+      {
+        "serviceId" : "693126354",
+        "track" : "Cuando Zarpa El Amor",
+        "service" : "applemusic",
+        "isrc" : "ES5080400083",
+        "artist" : "Camela",
+        "album" : "Dioni, Ángeles y Miguel"
+      },
+      {
+        "artist" : "CantaJuego",
+        "serviceId" : "1815321362",
+        "isrc" : "ES6081810816",
+        "album" : "Super Éxitos",
+        "track" : "Soy una Taza (Versión 2019)",
+        "service" : "applemusic"
+      },
+      {
+        "isrc" : "COFC10910010",
+        "album" : "Día Tras Día",
+        "artist" : "Andrés Cepeda",
+        "service" : "applemusic",
+        "serviceId" : "1735811389",
+        "track" : "Se Te Nota"
+      },
+      {
+        "service" : "applemusic",
+        "serviceId" : "1623372943",
+        "album" : "SloMo (Eurovision's Dancebreak Edit) - Single",
+        "artist" : "Chanel",
+        "track" : "SloMo (Eurovision's Dancebreak Edit)",
+        "isrc" : "ES94B2200107"
+      },
+      {
+        "track" : "Torero",
+        "artist" : "Chayanne",
+        "album" : "Grandes Éxitos",
+        "isrc" : "NLB630200016",
+        "service" : "applemusic",
+        "serviceId" : "162308851"
+      },
+      {
+        "service" : "applemusic",
+        "serviceId" : "1443353134",
+        "isrc" : "ES6010200167",
+        "album" : "Chenoa",
+        "track" : "Cuando Tú Vas",
+        "artist" : "Chenoa"
+      },
+      {
+        "track" : "La Chica Ye-Ye",
+        "isrc" : "DEXN92264767",
+        "serviceId" : "1620245427",
+        "service" : "applemusic",
+        "artist" : "Concha Velasco",
+        "album" : "Las Canciones de Concha Velasco"
+      },
+      {
+        "serviceId" : "1630351475",
+        "service" : "applemusic",
+        "isrc" : "ES6010100020",
+        "album" : "Me Vale",
+        "artist" : "Coyote Dax",
+        "track" : "No Rompas Mi Corazón"
+      },
+      {
+        "track" : "Azul",
+        "isrc" : "USBL10100287",
+        "album" : "Cancionero",
+        "service" : "applemusic",
+        "artist" : "Cristian Castro",
+        "serviceId" : "1140337878"
+      },
+      {
+        "artist" : "David Bisbal",
+        "service" : "applemusic",
+        "isrc" : "ES6010200293",
+        "track" : "Ave María",
+        "serviceId" : "1442852141",
+        "album" : "Corazón Latino"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "USUM71020778",
+        "track" : "Danza Kuduro (feat. Lucenzo)",
+        "serviceId" : "1440636498",
+        "artist" : "Don Omar",
+        "album" : "Meet The Orphans (Deluxe Edition)"
+      },
+      {
+        "serviceId" : "289543922",
+        "album" : "Resistiré",
+        "isrc" : "ES5110002956",
+        "track" : "Resistiré",
+        "artist" : "Dúo Dinámico",
+        "service" : "applemusic"
+      },
+      {
+        "album" : "Canciones para Toda la Vida",
+        "isrc" : "ES5089302510",
+        "track" : "El Chacachá del Tren",
+        "artist" : "El Consorcio",
+        "serviceId" : "699619884",
+        "service" : "applemusic"
+      },
+      {
+        "artist" : "Estopa",
+        "serviceId" : "1109973192",
+        "track" : "Por la Raja de Tu Falda",
+        "album" : "Esencial Estopa",
+        "service" : "applemusic",
+        "isrc" : "ES5029900140"
+      },
+      {
+        "album" : "Canciones Prohibidas",
+        "isrc" : "ES5019814000",
+        "service" : "applemusic",
+        "track" : "Salir",
+        "serviceId" : "403729816",
+        "artist" : "Extremoduro"
+      },
+      {
+        "isrc" : "QZTB82355610",
+        "album" : "Potra Salvaje (Hard Remix) - Single",
+        "artist" : "Isabel Aaiún",
+        "track" : "Potra Salvaje (Hard Remix)",
+        "serviceId" : "1750981699",
+        "service" : "applemusic"
+      },
+      {
+        "service" : "applemusic",
+        "track" : "Se Me Enamora el Alma",
+        "album" : "Pasión y Deseo - Sus Grandes Éxitos de la Copla y de la Balada Romántica",
+        "artist" : "Isabel Pantoja",
+        "serviceId" : "333607875",
+        "isrc" : "ES5028900068"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "ES5029200072",
+        "track" : "Y Nos Dieron las Diez",
+        "album" : "Física y Química",
+        "artist" : "Joaquín Sabina",
+        "serviceId" : "268603427"
+      },
+      {
+        "isrc" : "USJ3V1862535",
+        "album" : "Merengue Mania ¡Éxitos Latino!",
+        "track" : "La Bilirrubina",
+        "artist" : "Juan Luis Guerra",
+        "service" : "applemusic",
+        "serviceId" : "1560870008"
+      },
+      {
+        "serviceId" : "323475992",
+        "isrc" : "NLB637800101",
+        "album" : "Mi Vida - Grandes Éxitos",
+        "service" : "applemusic",
+        "track" : "Soy un Truhán, Soy un Señor",
+        "artist" : "Julio Iglesias"
+      },
+      {
+        "track" : "El Baúl de los Recuerdos",
+        "artist" : "Karina",
+        "service" : "applemusic",
+        "isrc" : "ES5299400048",
+        "album" : "Mágicos 60",
+        "serviceId" : "157403400"
+      },
+      {
+        "serviceId" : "1819545673",
+        "isrc" : "USUG12400968",
+        "track" : "Si Antes Te Hubiera Conocido",
+        "service" : "applemusic",
+        "artist" : "KAROL G",
+        "album" : "Tropicoqueta"
+      },
+      {
+        "serviceId" : "1444002414",
+        "track" : "No Estamos Lokos (Kalikeno)",
+        "service" : "applemusic",
+        "isrc" : "ES5009500064",
+        "artist" : "Ketama",
+        "album" : "De Aki a Ketama"
+      },
+      {
+        "album" : "Hoy Sus 30 Mejores Canciones",
+        "service" : "applemusic",
+        "track" : "Carmen",
+        "isrc" : "ES5630700152",
+        "artist" : "Los Chunguitos",
+        "serviceId" : "259103307"
+      },
+      {
+        "serviceId" : "258647542",
+        "isrc" : "ES5109500538",
+        "track" : "Macarena (Original Version)",
+        "artist" : "Los del Río",
+        "service" : "applemusic",
+        "album" : "Fiesta Macarena"
+      },
+      {
+        "artist" : "Los del Río",
+        "isrc" : "ES5100100219",
+        "service" : "applemusic",
+        "album" : "Alegría y Cosabuena",
+        "track" : "Sevilla Tiene un Color Especial",
+        "serviceId" : "255684965"
+      },
+      {
+        "track" : "Amigos para Siempre",
+        "album" : "Rumbas Sin Fronteras",
+        "artist" : "Los Manolos",
+        "service" : "applemusic",
+        "isrc" : "ES5020100334",
+        "serviceId" : "255677282"
+      },
+      {
+        "track" : "Déjame",
+        "serviceId" : "101205025",
+        "artist" : "Los Secretos",
+        "service" : "applemusic",
+        "isrc" : "ES6009600120",
+        "album" : "Grandes Éxitos"
+      },
+      {
+        "serviceId" : "1445025224",
+        "isrc" : "USUM71700112",
+        "album" : "Despacito (Versión Pop) - Single",
+        "track" : "Despacito (Versión Pop)",
+        "artist" : "Luis Fonsi",
+        "service" : "applemusic"
+      },
+      {
+        "track" : "Pájaros de Barro",
+        "isrc" : "ES5029800161",
+        "album" : "Arena en los Bolsillos",
+        "artist" : "Manolo García",
+        "service" : "applemusic",
+        "serviceId" : "276995935"
+      },
+      {
+        "album" : "El Merengue - Single",
+        "service" : "applemusic",
+        "isrc" : "USSD12300040",
+        "track" : "El Merengue",
+        "artist" : "Marshmello & Manuel Turizo",
+        "serviceId" : "1673869624"
+      },
+      {
+        "album" : "Sueños Líquidos",
+        "serviceId" : "306124358",
+        "service" : "applemusic",
+        "artist" : "Maná",
+        "track" : "Clavado en un Bar",
+        "isrc" : "MXF159700094"
+      },
+      {
+        "track" : "Mari Carmen",
+        "serviceId" : "1472265522",
+        "service" : "applemusic",
+        "artist" : "La Pegatina",
+        "album" : "Xapomelön",
+        "isrc" : "ES7311100021"
+      },
+      {
+        "album" : "Lo Mejor de Marta Sánchez",
+        "service" : "applemusic",
+        "artist" : "Marta Sánchez",
+        "isrc" : "ES5700501183",
+        "track" : "Soldados del Amor (Love Crusaders) [Live]",
+        "serviceId" : "1442665094"
+      },
+      {
+        "service" : "applemusic",
+        "artist" : "Beatriz y su Acordeón",
+        "serviceId" : "1728036402",
+        "album" : "Poquito a Poco",
+        "isrc" : "ES7421600239",
+        "track" : "El Polvorete"
+      },
+      {
+        "track" : "Se Acabó",
+        "album" : "12 Grandes Éxitos",
+        "artist" : "María Jiménez",
+        "service" : "applemusic",
+        "serviceId" : "128179175",
+        "isrc" : "ES5079100127"
+      },
+      {
+        "service" : "applemusic",
+        "track" : "Hoy no Me Puedo Levantar",
+        "serviceId" : "1559885440",
+        "album" : "Mecano",
+        "isrc" : "ES5029700676",
+        "artist" : "Mecano"
+      },
+      {
+        "album" : "Caminando Por La Vida (Remastered)",
+        "track" : "Caminando Por La Vida (Remastered)",
+        "service" : "applemusic",
+        "artist" : "Melendi",
+        "serviceId" : "726341812",
+        "isrc" : "ES5080700531"
+      },
+      {
+        "track" : "El Baile del Gorila",
+        "service" : "applemusic",
+        "serviceId" : "1339123856",
+        "isrc" : "ES5110103506",
+        "album" : "De Pata Negra",
+        "artist" : "Melody"
+      },
+      {
+        "artist" : "Miguel Bosé",
+        "isrc" : "NLB638490150",
+        "serviceId" : "422022735",
+        "album" : "Bandido",
+        "track" : "Amante Bandido",
+        "service" : "applemusic"
+      },
+      {
+        "isrc" : "ES5110002561",
+        "artist" : "Mónica Naranjo",
+        "serviceId" : "283536755",
+        "service" : "applemusic",
+        "track" : "Sobreviviré",
+        "album" : "Minage"
+      },
+      {
+        "service" : "applemusic",
+        "serviceId" : "1443284629",
+        "album" : "Un Beso Y Una Flor (Remastered 2016)",
+        "artist" : "Nino Bravo",
+        "track" : "Un Beso Y Una Flor (Remastered 2016)",
+        "isrc" : "ES5701600285"
+      },
+      {
+        "track" : "Historias de amor",
+        "service" : "applemusic",
+        "serviceId" : "695551557",
+        "album" : "Llámalo Sueño",
+        "artist" : "OBK",
+        "isrc" : "ES1059200100"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "ES5088303961",
+        "artist" : "Paloma San Basilio",
+        "album" : "Las 101 canciones - Cinco décadas de Pop Español",
+        "serviceId" : "930077977",
+        "track" : "Juntos"
+      },
+      {
+        "serviceId" : "276169923",
+        "album" : "Marinero de Luces",
+        "service" : "applemusic",
+        "isrc" : "ES5028500092",
+        "track" : "Hoy Quiero Confesarme",
+        "artist" : "Isabel Pantoja"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "ES5027500283",
+        "album" : "La Copla, Siempre",
+        "track" : "No Te Vayas de Navarra (Pasodoble)",
+        "serviceId" : "273921316",
+        "artist" : "Marifé de Triana"
+      },
+      {
+        "isrc" : "ES5117900040",
+        "track" : "Háblame de Ti",
+        "service" : "applemusic",
+        "serviceId" : "283155186",
+        "artist" : "Pecos",
+        "album" : "30 Grandes Éxitos y un Par de Corazones"
+      },
+      {
+        "service" : "applemusic",
+        "serviceId" : "274146665",
+        "album" : "Animales",
+        "artist" : "Pereza",
+        "isrc" : "ES5020500059",
+        "track" : "Princesas"
+      },
+      {
+        "artist" : "Los Charros de Luchito y Rafael",
+        "isrc" : "CLDG21400407",
+        "service" : "applemusic",
+        "track" : "Mi Gran Noche",
+        "serviceId" : "1283366227",
+        "album" : "A Pasos de Gigante"
+      },
+      {
+        "track" : "Livin' la Vida Loca",
+        "serviceId" : "192821659",
+        "album" : "Ricky Martin",
+        "isrc" : "NLB639920005",
+        "service" : "applemusic",
+        "artist" : "Ricky Martin"
+      },
+      {
+        "album" : "Rocío Dúrcal: Sus 16 Grandes Éxitos",
+        "artist" : "Rocío Dúrcal",
+        "isrc" : "MXF019100120",
+        "serviceId" : "168412220",
+        "track" : "Me Gustas Mucho",
+        "service" : "applemusic"
+      },
+      {
+        "track" : "Como una Ola",
+        "artist" : "Rocío Jurado",
+        "album" : "Los Grandes Exitos: Viva el Amor",
+        "service" : "applemusic",
+        "isrc" : "ES5028100144",
+        "serviceId" : "279848357"
+      },
+      {
+        "artist" : "Rosa López",
+        "isrc" : "ES5020200286",
+        "album" : "Rosa",
+        "serviceId" : "478019634",
+        "service" : "applemusic",
+        "track" : "Europe's Livíng a Celebration (Versión Cibeles)"
+      },
+      {
+        "serviceId" : "164159729",
+        "artist" : "Rosario",
+        "track" : "Muchas Flores",
+        "service" : "applemusic",
+        "album" : "Muchas Flores",
+        "isrc" : "ES5110103389"
+      },
+      {
+        "track" : "Chiquilla",
+        "service" : "applemusic",
+        "artist" : "Seguridad Social",
+        "serviceId" : "42231361",
+        "isrc" : "ES5019150000",
+        "album" : "Grandes Exitos (Gracias Por las Molestias)"
+      },
+      {
+        "isrc" : "USSD11600217",
+        "artist" : "Carlos Vives & Shakira",
+        "album" : "La Bicicleta (Remix) [feat. Maluma] - Single",
+        "service" : "applemusic",
+        "track" : "La Bicicleta (Remix) [feat. Maluma]",
+        "serviceId" : "1145210128"
+      },
+      {
+        "artist" : "Bizarrap & Shakira",
+        "serviceId" : "1731060236",
+        "isrc" : "UYB282301031",
+        "album" : "Las Mujeres Ya No Lloran",
+        "service" : "applemusic",
+        "track" : "Shakira: Bzrp Music Sessions, Vol. 53"
+      },
+      {
+        "serviceId" : "255617963",
+        "service" : "applemusic",
+        "track" : "A Mi Manera",
+        "isrc" : "ES6020100007",
+        "album" : "10 Años Juntos",
+        "artist" : "Siempre Así"
+      },
+      {
+        "serviceId" : "1443746027",
+        "service" : "applemusic",
+        "artist" : "Sonia y Selena",
+        "album" : "Yo Quiero Bailar",
+        "isrc" : "ES6010200113",
+        "track" : "Yo Quiero Bailar"
+      },
+      {
+        "serviceId" : "1443555265",
+        "artist" : "Tamara",
+        "album" : "Gracias (Edited Version)",
+        "service" : "applemusic",
+        "isrc" : "ES5709904790",
+        "track" : "Si Nos Dejan"
+      },
+      {
+        "service" : "applemusic",
+        "album" : "El baile del pañuelo",
+        "serviceId" : "1695162826",
+        "track" : "No cambié (feat. Tamara)",
+        "isrc" : "ESA011221717",
+        "artist" : "Leonardo Dantés"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "ES5022202466",
+        "track" : "Nochentera",
+        "serviceId" : "1650898131",
+        "artist" : "Vicco",
+        "album" : "Nochentera - Single"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "USJE61710439",
+        "serviceId" : "1315218782",
+        "track" : "Tractor Amarillo",
+        "album" : "Ponti \"Country\" La Pared",
+        "artist" : "Zapato Veloz"
+      },
+      {
+        "track" : "Pena, Penita Pena",
+        "artist" : "Lola Flores",
+        "service" : "applemusic",
+        "serviceId" : "162276609",
+        "isrc" : "ES5378900031",
+        "album" : "Exitos, Vol.1"
+      },
+      {
+        "isrc" : "USA371225048",
+        "album" : "Lola Flores - Sus 100 Mejores Canciones",
+        "artist" : "Lola Flores",
+        "service" : "applemusic",
+        "serviceId" : "427245793",
+        "track" : "La Zarzamora"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "ES5119000008",
+        "album" : "Mucho Ázucar - Grandes Éxitos",
+        "track" : "Bandido",
+        "serviceId" : "290883355",
+        "artist" : "Azúcar Moreno"
+      },
+      {
+        "isrc" : "ES5018572005",
+        "track" : "Devuélveme a Mi Chica",
+        "service" : "applemusic",
+        "artist" : "Hombres G",
+        "serviceId" : "979321016",
+        "album" : "Hombres G (Edición 30 Aniversario)"
+      },
+      {
+        "service" : "applemusic",
+        "artist" : "Georgie Dann",
+        "album" : "El Negro No Puede (Remasterizado)",
+        "track" : "El Negro No Puede (Remasterizado)",
+        "serviceId" : "1471952239",
+        "isrc" : "ES5021901033"
+      },
+      {
+        "artist" : "Lolita",
+        "service" : "applemusic",
+        "track" : "Sarandonga",
+        "serviceId" : "257203793",
+        "album" : "Lola Lolita Lola",
+        "isrc" : "ES5150154002"
+      },
+      {
+        "serviceId" : "379425107",
+        "track" : "Dueña De Mis Ojos",
+        "isrc" : "USA561002405",
+        "service" : "applemusic",
+        "artist" : "Marcos Llunas",
+        "album" : "Me Gusta"
+      },
+      {
+        "service" : "applemusic",
+        "album" : "Fiesta Carnaval \/ Digital Compilation",
+        "isrc" : "ES7580502207",
+        "serviceId" : "213875886",
+        "track" : "El Baile de los Pajaritos",
+        "artist" : "Maria Jesus y Su Acordeon"
+      },
+      {
+        "album" : "VAGABUNDO - Single",
+        "track" : "VAGABUNDO",
+        "service" : "applemusic",
+        "artist" : "Sebastián Yatra, Manuel Turizo & Beéle",
+        "isrc" : "USUM72305982",
+        "serviceId" : "1686245995"
+      },
+      {
+        "album" : "La Voz de Oro",
+        "service" : "applemusic",
+        "serviceId" : "255688927",
+        "artist" : "Joselito",
+        "isrc" : "ES5029800715",
+        "track" : "Campanera"
+      },
+      {
+        "artist" : "Antonio Molina",
+        "serviceId" : "282320272",
+        "track" : "Cocinero Cocinero",
+        "album" : "Grabaciones Discos Pizarra: Antonio Molina",
+        "service" : "applemusic",
+        "isrc" : "ES5300205733"
+      },
+      {
+        "serviceId" : "19468968",
+        "artist" : "Juan Luis Guerra 4.40",
+        "track" : "Burbujas de Amor",
+        "isrc" : "USKP10400047",
+        "service" : "applemusic",
+        "album" : "Bachata Rosa"
+      },
+      {
+        "album" : "Orígenes",
+        "artist" : "Massiel",
+        "serviceId" : "1344881200",
+        "isrc" : "ES5100300048",
+        "service" : "applemusic",
+        "track" : "La, La, La"
+      },
+      {
+        "artist" : "CantaJuego",
+        "service" : "applemusic",
+        "album" : "CantaJuego, Vol. 1",
+        "isrc" : "ES5021400057",
+        "track" : "Susanita Tiene un Ratón",
+        "serviceId" : "826892125"
+      },
+      {
+        "isrc" : "ES5021400050",
+        "album" : "CantaJuego, Vol. 1",
+        "service" : "applemusic",
+        "track" : "Coco en Su Río",
+        "serviceId" : "826892118",
+        "artist" : "CantaJuego"
+      },
+      {
+        "serviceId" : "1158274341",
+        "album" : "Ave Fénix",
+        "track" : "Escándalo",
+        "artist" : "Raphael",
+        "service" : "applemusic",
+        "isrc" : "NLB639210006"
+      },
+      {
+        "album" : "Quevedo: Bzrp Music Sessions, Vol. 52 - Single",
+        "track" : "Quevedo: Bzrp Music Sessions, Vol. 52",
+        "artist" : "Bizarrap & Quevedo",
+        "service" : "applemusic",
+        "serviceId" : "1632746802",
+        "isrc" : "UYB282201028"
+      },
+      {
+        "service" : "applemusic",
+        "isrc" : "ITM000102377",
+        "artist" : "Raffaella Carrà",
+        "album" : "JOY",
+        "serviceId" : "1613335113",
+        "track" : "Hay Que Venir Al Sur (Tanti Auguri)"
+      }
+    ],
+    "serviceId" : "pl.u-Z6xlF0VjKox",
+    "name" : "Bingo Musical VDR",
+    "service" : "applemusic",
+    "snapshotId" : null
+  }
+]
