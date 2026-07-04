@@ -378,7 +378,7 @@ function normalizeOneV2Track(t){
 // Devuelve el catálogo COMPLETO normalizado (sin filtrar por "active" ni colocar fixedBall todavía).
 // El filtrado y la colocación de bolas fijas se hacen aparte, en computeFilteredArranged().
 function normalizeToFullCatalog(json){
-  if(json && json.version === 2 && Array.isArray(json.tracks)){
+  if(json && json.version >= 2 && Array.isArray(json.tracks)){
     return json.tracks.map(normalizeOneV2Track);
   } else if(Array.isArray(json)){
     const raw = (json.length && json[0] && Array.isArray(json[0].tracks)) ? json[0].tracks : json;
