@@ -105,9 +105,12 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
       <button id="validateBtn" class="btn">Validar boleto</button>
       <button id="resetBtn" class="btn">Reiniciar</button>
       <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
-      <label class="toggle"><input type="checkbox" id="cbAutoOpen" checked> Abrir enlace al sacar bola</label>
+      <label class="toggle"><input type="checkbox" id="cbAutoOpen"> Abrir enlace al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
-      <label class="toggle"><input type="checkbox" id="cbBalanced"> Modo equilibrado (jóvenes/mayores/bisagra)</label>
+      <label class="toggle"><input type="checkbox" id="cbBalanced" checked> Modo equilibrado (jóvenes/mayores/bisagra)</label>
+      <label class="toggle"><input type="checkbox" id="cbJovenes"> Solo jóvenes</label>
+      <label class="toggle"><input type="checkbox" id="cbMayores"> Solo mayores</label>
+      <label class="toggle"><input type="checkbox" id="cbBisagra"> Solo bisagra</label>
     </div>
   </header>
 
@@ -263,6 +266,7 @@ const el = id => document.getElementById(id);
 const ballNum = el('ballNum'), songTitle = el('songTitle'), songArtist = el('songArtist'), songLinks = el('songLinks');
 const drawnList = el('drawnList'), pendingList = el('pendingList');
 const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen'), cbEmbed = el('cbEmbed'), cbBalanced = el('cbBalanced');
+const cbJovenes = el('cbJovenes'), cbMayores = el('cbMayores'), cbBisagra = el('cbBisagra');
 const loadBtn = el('loadBtn'), reloadBtn = el('reloadBtn'), jsonInput = el('jsonInput'), statusMsg = el('statusMsg');
 const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
 const playerBox = el('playerBox');
@@ -549,6 +553,17 @@ function findGuaranteedForce(){
   return -1;
 }
 
+// Modo filtro fijo: elige al azar solo entre canciones de una categoría concreta.
+// Si no quedan canciones de esa categoría, cae en puro azar como fallback.
+function pickIndexFiltered(tag){
+  const candidates = [];
+  for(let i = 0; i < order.length; i++){
+    if((tracks[order[i]].tags || []).includes(tag)) candidates.push(i);
+  }
+  if(candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
+  return Math.floor(Math.random() * order.length);
+}
+
 // Modo equilibrado: rota entre categorías de público y elige al azar dentro de la categoría actual.
 // Si una categoría no tiene candidatos pendientes, prueba con la siguiente en la rotación.
 function pickIndexBalanced(){
@@ -570,7 +585,11 @@ function drawOne(){
   if(order.length===0){status("No quedan bolas. ¡Bingo completo!"); return;}
   let posInOrder = findGuaranteedForce();
   if(posInOrder === -1){
-    posInOrder = cbBalanced.checked ? pickIndexBalanced() : Math.floor(Math.random()*order.length);
+    if(cbBalanced.checked)       posInOrder = pickIndexBalanced();
+    else if(cbJovenes.checked)   posInOrder = pickIndexFiltered('jovenes');
+    else if(cbMayores.checked)   posInOrder = pickIndexFiltered('mayores');
+    else if(cbBisagra.checked)   posInOrder = pickIndexFiltered('bisagra');
+    else                         posInOrder = Math.floor(Math.random()*order.length);
   }
   const idx = order.splice(posInOrder,1)[0];
   const item = tracks[idx];
@@ -591,6 +610,11 @@ function resetAll(){
   order = Array.from({length: tracks.length}, (_,i)=>i);
   drawn = [];
   rotationIndex = 0;
+  cbAutoOpen.checked = false;
+  cbBalanced.checked = true;
+  cbJovenes.checked = false;
+  cbMayores.checked = false;
+  cbBisagra.checked = false;
   setCurrent();
   updateUI();
   saveState();
@@ -782,6 +806,24 @@ async function loadOfficialList(tryRestore){
 // ========= eventos =========
 drawBtn.addEventListener('click', drawOne);
 resetBtn.addEventListener('click', resetAll);
+
+// Exclusividad mutua: categoría fija <-> modo equilibrado
+[cbJovenes, cbMayores, cbBisagra].forEach(cb => {
+  cb.addEventListener('change', () => {
+    if(cb.checked){
+      cbBalanced.checked = false;
+      [cbJovenes, cbMayores, cbBisagra].forEach(o => { if(o !== cb) o.checked = false; });
+    }
+  });
+});
+cbBalanced.addEventListener('change', () => {
+  if(cbBalanced.checked){
+    cbJovenes.checked = false;
+    cbMayores.checked = false;
+    cbBisagra.checked = false;
+  }
+});
+
 cbEmbed.addEventListener('change', ()=>{
   const last = drawn.length ? drawn[drawn.length-1] : null;
   updatePlayer(last ? last.item : null);
@@ -791,10 +833,15 @@ reloadBtn.addEventListener('click', ()=> loadOfficialList(false));
 applyFilterBtn.addEventListener('click', applyFilter);
 downloadFilteredBtn.addEventListener('click', downloadFilteredJson);
 
+let _lastDraw = 0;
 document.addEventListener('keydown', (e)=>{
   const tag = e.target.tagName;
   if(e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'BUTTON' && tag !== 'SELECT'){
     e.preventDefault();
+    if(e.repeat) return; // ignorar repetición por tecla mantenida
+    const now = Date.now();
+    if(now - _lastDraw < 600) return; // cooldown 600ms contra pulsado accidental doble
+    _lastDraw = now;
     drawOne();
   }
 });
