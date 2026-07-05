@@ -554,13 +554,15 @@ function findGuaranteedForce(){
 }
 
 // Modo filtro fijo: elige al azar solo entre canciones de una categoría concreta.
-// Si no quedan canciones de esa categoría, cae en puro azar como fallback.
-function pickIndexFiltered(tag){
+// Si se agotan las canciones de esa categoría, desmarca el check y cae en azar libre.
+function pickIndexFiltered(tag, cb){
   const candidates = [];
   for(let i = 0; i < order.length; i++){
     if((tracks[order[i]].tags || []).includes(tag)) candidates.push(i);
   }
   if(candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
+  cb.checked = false;
+  status(`Sin canciones de "${tag}" pendientes — sorteo libre.`);
   return Math.floor(Math.random() * order.length);
 }
 
@@ -586,9 +588,9 @@ function drawOne(){
   let posInOrder = findGuaranteedForce();
   if(posInOrder === -1){
     if(cbBalanced.checked)       posInOrder = pickIndexBalanced();
-    else if(cbJovenes.checked)   posInOrder = pickIndexFiltered('jovenes');
-    else if(cbMayores.checked)   posInOrder = pickIndexFiltered('mayores');
-    else if(cbBisagra.checked)   posInOrder = pickIndexFiltered('bisagra');
+    else if(cbJovenes.checked)   posInOrder = pickIndexFiltered('jovenes', cbJovenes);
+    else if(cbMayores.checked)   posInOrder = pickIndexFiltered('mayores', cbMayores);
+    else if(cbBisagra.checked)   posInOrder = pickIndexFiltered('bisagra', cbBisagra);
     else                         posInOrder = Math.floor(Math.random()*order.length);
   }
   const idx = order.splice(posInOrder,1)[0];
