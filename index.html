@@ -46,7 +46,10 @@ header .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .pill small{color:var(--muted)}
 .pill.used{opacity:.55}
 .pill.fixed{border-color:var(--warn)}
-.pill .open{margin-left:auto}
+.pill-links{display:flex;gap:4px;align-items:center;flex-shrink:0;margin-left:auto}
+.pill-links a{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid #2b2f52;background:#151935;color:var(--text);text-decoration:none;flex-shrink:0}
+.pill-links a:hover{border-color:var(--accent)}
+.pill-links svg{width:13px;height:13px}
 details.loader{margin-top:16px}
 details.loader>summary{cursor:pointer;user-select:none;padding:14px 16px}
 .loader .panel{padding:0 16px 16px}
@@ -63,6 +66,7 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
 .modal .content{padding:16px}
 .grid8{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
 .grid8 input{width:100%; padding:10px; border-radius:8px; border:1px solid #2b2f52; background:#0f1330; color:var(--text); text-align:center; font-weight:700}
+.grid8 input.invalid{border-color:var(--danger);background:#1a0a10;box-shadow:0 0 0 1px var(--danger) inset}
 .modal footer{padding:12px 16px; border-top:1px solid #2b2f52; display:flex; gap:10px; justify-content:flex-end}
 .note{font-size:12px; color:var(--muted); margin:10px 0 0}
 .result{margin-top:12px; font-size:14px}
@@ -90,8 +94,10 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
 .filterGroup h4 small{color:var(--muted);font-weight:400}
 .filterGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
 @media (max-width:700px){.filterGrid{grid-template-columns:1fr}}
-.filterItem{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#141835;border:1px solid #2b2f52;border-radius:8px;font-size:13px;cursor:pointer}
-.filterItem.locked{opacity:.6;cursor:not-allowed;border-color:var(--warn)}
+.filterItem{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#141835;border:1px solid #2b2f52;border-radius:8px;font-size:13px}
+.filterItem label{flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;margin:0}
+.filterItem.locked{opacity:.6;border-color:var(--warn)}
+.filterItem.locked label{cursor:not-allowed}
 .filterItem small{color:var(--muted)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -292,6 +298,39 @@ let rotationIndex = 0; // puntero del modo equilibrado, gira entre CATEGORY_ROTA
 
 // ========= localStorage persistence =========
 const LS_KEY = 'bingoState_vdr_v2';
+const LS_FILTER_KEY = 'bingoFilter_vdr_v1';
+
+function trackSig(t){ return t.id ? String(t.id) : (t.title + '\x00' + t.artist); }
+
+function saveFilter(){
+  try{
+    const inactive = fullCatalog.filter(t => t.active === false && !t.fixedBall).map(trackSig);
+    if(inactive.length){
+      localStorage.setItem(LS_FILTER_KEY, JSON.stringify(inactive));
+    } else {
+      localStorage.removeItem(LS_FILTER_KEY);
+    }
+  }catch(e){}
+}
+
+function restoreFilter(catalog){
+  try{
+    const raw = localStorage.getItem(LS_FILTER_KEY);
+    if(!raw) return false;
+    const inactive = JSON.parse(raw);
+    if(!Array.isArray(inactive) || !inactive.length) return false;
+    const inactiveSet = new Set(inactive);
+    let applied = false;
+    catalog.forEach(t => {
+      if(!t.fixedBall && inactiveSet.has(trackSig(t))){ t.active = false; applied = true; }
+    });
+    return applied;
+  }catch(e){ return false; }
+}
+
+function clearFilter(){
+  try{ localStorage.removeItem(LS_FILTER_KEY); }catch(e){}
+}
 function saveState(){
   try{
     localStorage.setItem(LS_KEY, JSON.stringify({
@@ -531,13 +570,17 @@ function updateUI(){
 
 function pill(item, index, used, current=false){
   const n = index + 1;
-  const service = preferredService(item.links);
-  const href = service ? hrefFor(item, service) : "";
-  const meta = service ? SERVICE_META[service] : null;
   const isFixed = !!item.fixedBall;
+  const serviceLinksHtml = SERVICE_PRIORITY
+    .filter(s => item.links && item.links[s])
+    .map(s => {
+      const href = hrefFor(item, s);
+      const meta = SERVICE_META[s];
+      return href ? `<a class="open" href="${href}" title="Reproducir en ${meta.label}">${meta.icon}</a>` : '';
+    }).filter(Boolean).join('');
   return `<div class="pill ${used?'used':''} ${current?'current':''} ${isFixed?'fixed':''}">
     <span><strong>#${n}</strong> · ${escapeHtml(item.title)} <small>· ${escapeHtml(item.artist||'')}</small></span>
-    ${href ? `<a class="open" href="${href}" title="Abrir en ${meta.label}">${meta.icon}</a>` : ''}
+    ${serviceLinksHtml ? `<div class="pill-links">${serviceLinksHtml}</div>` : ''}
   </div>`;
 }
 
@@ -621,6 +664,7 @@ function resetAll(){
   setCurrent();
   updateUI();
   saveState();
+  clearFilter();
   status("Reiniciado.");
 }
 
@@ -678,16 +722,33 @@ function renderFilterPanel(){
       <div class="filterGrid">`;
     groups[cat].forEach(({t, idx}) => {
       const locked = !!t.fixedBall; // el pasodoble no se puede desactivar desde aquí
-      html += `<label class="filterItem ${locked?'locked':''}" title="${locked ? 'Esta canción está fijada a una bola concreta y no se puede desactivar aquí.' : ''}">
-        <input type="checkbox" data-idx="${idx}" ${t.active!==false?'checked':''} ${locked?'disabled':''}>
-        <span>${escapeHtml(t.title)} <small>· ${escapeHtml(t.artist||'')}</small></span>
-      </label>`;
+      const filterServiceLinksHtml = SERVICE_PRIORITY
+        .filter(s => t.links && t.links[s])
+        .map(s => {
+          const href = hrefFor(t, s);
+          const meta = SERVICE_META[s];
+          return href ? `<a class="open" href="${href}" title="Reproducir en ${meta.label}">${meta.icon}</a>` : '';
+        }).filter(Boolean).join('');
+      html += `<div class="filterItem ${locked?'locked':''}">
+        <label title="${locked ? 'Esta canción está fijada a una bola concreta y no se puede desactivar aquí.' : ''}">
+          <input type="checkbox" data-idx="${idx}" ${t.active!==false?'checked':''} ${locked?'disabled':''}>
+          <span>${escapeHtml(t.title)} <small>· ${escapeHtml(t.artist||'')}</small></span>
+        </label>
+        ${filterServiceLinksHtml ? `<div class="pill-links">${filterServiceLinksHtml}</div>` : ''}
+      </div>`;
     });
     html += `</div></div>`;
   });
 
   filterPanelBody.innerHTML = html;
   updateFilterCount();
+
+  filterPanelBody.querySelectorAll('a.open').forEach(a => {
+    a.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      openInSideTab(a.href);
+    }, {passive: false});
+  });
 
   filterPanelBody.querySelectorAll('input[type=checkbox]').forEach(cb => {
     cb.addEventListener('change', () => {
@@ -704,14 +765,22 @@ function updateFilterCount(){
 }
 
 function applyFilter(){
+  const activeCount = fullCatalog.filter(t => t.active !== false).length;
   const {arranged, error} = computeFilteredArranged(fullCatalog);
   if(error){
     alert(error);
     return;
   }
+  if(activeCount !== 89){
+    const diff = activeCount < 89
+      ? `Faltan ${89 - activeCount} para llegar a las 89 habituales.`
+      : `Son ${activeCount - 89} más de las 89 habituales.`;
+    if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Aplicar el filtro de todos modos?`)) return;
+  }
   const applyIt = () => {
     resetState(arranged);
     saveState();
+    saveFilter();
     status(`Filtro aplicado: ${arranged.length} de ${fullCatalog.length} canciones en juego.`);
   };
   if(drawn.length > 0){
@@ -724,6 +793,13 @@ function applyFilter(){
 }
 
 function downloadFilteredJson(){
+  const activeCount = fullCatalog.filter(t => t.active !== false).length;
+  if(activeCount !== 89){
+    const diff = activeCount < 89
+      ? `Faltan ${89 - activeCount} para llegar a las 89 habituales.`
+      : `Son ${activeCount - 89} más de las 89 habituales.`;
+    if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Descargar el JSON filtrado de todos modos?`)) return;
+  }
   const payload = {
     version: 5,
     lists: [{ id: "applemusic-vdr", service: "applemusic", name: "Bingo Musical VDR (filtrado)", url: null }],
@@ -757,6 +833,11 @@ function downloadFilteredJson(){
 // ========= carga de la lista =========
 function applyLoadedJson(json, label, tryRestore){
   fullCatalog = normalizeToFullCatalog(json);
+  if(tryRestore){
+    restoreFilter(fullCatalog);
+  } else {
+    clearFilter();
+  }
   const {arranged, error} = computeFilteredArranged(fullCatalog);
   let norm;
   if(error){
@@ -1035,7 +1116,7 @@ function openValidator(){
   validatorOverlay.style.display = 'flex';
   validatorOverlay.setAttribute('aria-hidden','false');
   const inputs = [...valGrid.querySelectorAll('input')];
-  inputs.forEach(i=>i.value='');
+  inputs.forEach(i=>{ i.value=''; i.classList.remove('invalid'); });
   inputs[0].focus();
 }
 function closeValidator(){
@@ -1058,10 +1139,22 @@ function parseTicketInputs(){
   return set.slice(0,8);
 }
 function validateTicket(){
+  const inputs = [...valGrid.querySelectorAll('input')];
+  inputs.forEach(i => i.classList.remove('invalid'));
+
+  const emptyInputs = inputs.filter(i => i.value.trim() === '');
+  if(emptyInputs.length > 0){
+    emptyInputs.forEach(i => i.classList.add('invalid'));
+    valResult.className = 'result err';
+    valResult.textContent = `Faltan ${emptyInputs.length} casilla${emptyInputs.length > 1 ? 's' : ''} por rellenar.`;
+    emptyInputs[0].focus();
+    return;
+  }
+
   const ticket = parseTicketInputs();
   if(ticket.length !== 8){
     valResult.className = 'result err';
-    valResult.textContent = 'Necesitas 8 números válidos del cartón.';
+    valResult.textContent = 'Necesitas 8 números válidos y distintos del cartón.';
     return;
   }
   const drawnNums = new Set(drawn.map(d=>d.index+1));
@@ -1086,9 +1179,21 @@ valClose.addEventListener('click', closeValidator);
 validatorOverlay.addEventListener('click', (e)=>{ if(e.target === validatorOverlay) closeValidator(); });
 valCheck.addEventListener('click', validateTicket);
 valClear.addEventListener('click', ()=>{
-  [...valGrid.querySelectorAll('input')].forEach(i=>i.value='');
+  [...valGrid.querySelectorAll('input')].forEach(i=>{ i.value=''; i.classList.remove('invalid'); });
   valResult.textContent='';
   valGrid.querySelector('input')?.focus();
+});
+valGrid.addEventListener('input', (e)=>{
+  if(e.target.tagName === 'INPUT'){
+    const v = e.target.value.trim();
+    if(v !== '' && !/^\d+$/.test(v)){
+      e.target.classList.add('invalid');
+    } else {
+      e.target.classList.remove('invalid');
+      valResult.textContent = '';
+      valResult.className = 'result';
+    }
+  }
 });
 valGrid.addEventListener('keydown', (e)=>{
   if(e.key === 'Enter'){
