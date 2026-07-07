@@ -53,7 +53,6 @@ header .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 details.loader{margin-top:16px}
 details.loader>summary{cursor:pointer;user-select:none;padding:14px 16px}
 .loader .panel{padding:0 16px 16px}
-textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52;background:#0f1330;color:var(--text);padding:12px;resize:vertical}
 .loader .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 .msg{margin-top:8px;font-size:13px;color:var(--muted)}
 /* ===== Modal Validación ===== */
@@ -67,6 +66,8 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
 .grid8{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
 .grid8 input{width:100%; padding:10px; border-radius:8px; border:1px solid #2b2f52; background:#0f1330; color:var(--text); text-align:center; font-weight:700}
 .grid8 input.invalid{border-color:var(--danger);background:#1a0a10;box-shadow:0 0 0 1px var(--danger) inset}
+.grid8 input.hit{border-color:var(--ok);background:#091a0f;box-shadow:0 0 0 1px var(--ok) inset}
+.grid8 input.miss{border-color:var(--danger);background:#1a0a10;box-shadow:0 0 0 1px var(--danger) inset}
 .modal footer{padding:12px 16px; border-top:1px solid #2b2f52; display:flex; gap:10px; justify-content:flex-end}
 .note{font-size:12px; color:var(--muted); margin:10px 0 0}
 .result{margin-top:12px; font-size:14px}
@@ -99,6 +100,9 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
 .filterItem.locked{opacity:.6;border-color:var(--warn)}
 .filterItem.locked label{cursor:not-allowed}
 .filterItem small{color:var(--muted)}
+select.btn{appearance:auto;padding-right:8px}
+.game-locked{opacity:.5;pointer-events:none}
+.game-locked>summary::after{content:" — reinicia la partida para modificar";color:var(--warn);font-size:11px;font-weight:400}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 </head>
@@ -111,6 +115,7 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
       <button id="drawBtn" class="btn primary">Sacar bola <span class="shortcut-hint">[Espacio]</span></button>
       <button id="validateBtn" class="btn">Validar boleto</button>
       <button id="resetBtn" class="btn">Reiniciar</button>
+      <select id="versionSelect" class="btn" title="Versión de la lista cargada"></select>
       <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbAutoOpen"> Abrir enlace al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
@@ -154,29 +159,9 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
     </div>
   </section>
 
-  <!-- Carga de JSON plegable -->
-  <details class="loader card" id="loaderBox">
-    <summary>📥 Cargar / editar lista</summary>
-    <div class="panel">
-      <p class="msg">
-        La lista oficial se carga automáticamente desde <code>bingo_musical_vdr_v5.json</code> (esquema v5, multi-servicio, con género/década/público, garantías de sorteo y filtro de canciones activas).
-        También puedes pegar aquí un JSON propio: admite el esquema v2+ (<code>{"version":2,"tracks":[...]}</code>)
-        o el formato antiguo de exportación de Apple Music (array con <code>tracks</code>).
-        La canción marcada con <code>"fixedBall": 24</code> se coloca siempre en la bola 24 (San Juan, 24 de junio).
-        Una canción con <code>"guaranteedBy": 15</code> se sortea al azar como cualquier otra, pero si para la bola nº15 del sorteo en vivo aún no ha salido, se fuerza en ese momento.
-        El modo equilibrado reparte el sorteo entre las etiquetas <code>jovenes</code> / <code>mayores</code> / <code>bisagra</code> / <code>todas-edades</code> en vez de puro azar.
-      </p>
-      <textarea id="jsonInput" placeholder="Pega aquí el JSON…"></textarea>
-      <div class="row">
-        <button id="loadBtn" class="btn primary">Cargar JSON pegado</button>
-        <button id="reloadBtn" class="btn">Recargar lista oficial (bingo_musical_vdr_v5.json)</button>
-      </div>
-    </div>
-  </details>
-
   <!-- Filtro de canciones -->
   <details class="loader card" id="filterBox">
-    <summary>🎚️ Filtrar canciones</summary>
+    <summary>🎚️ Filtrar canciones<span id="filterLockInfo" class="shortcut-hint"></span></summary>
     <div class="panel">
       <p class="msg">
         Marca o desmarca canciones para decidir cuáles entran en juego esta edición.
@@ -238,7 +223,7 @@ textarea{width:100%;min-height:180px;border-radius:10px;border:1px solid #2b2f52
 <script>
 // ========= constantes de servicios =========
 const APPLE_BASE = "https://music.apple.com/es/song/";
-const OFFICIAL_LIST_URL = "./bingo_musical_vdr_v5.json";
+const BASE_LIST_NAME = "bingo_musical_vdr";
 const CATEGORY_ROTATION = ["jovenes", "mayores", "bisagra", "todas-edades"];
 const SERVICE_PRIORITY = ["applemusic", "spotify", "youtube"];
 
@@ -274,12 +259,15 @@ const ballNum = el('ballNum'), songTitle = el('songTitle'), songArtist = el('son
 const drawnList = el('drawnList'), pendingList = el('pendingList');
 const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen'), cbEmbed = el('cbEmbed'), cbBalanced = el('cbBalanced');
 const cbJovenes = el('cbJovenes'), cbMayores = el('cbMayores'), cbBisagra = el('cbBisagra');
-const loadBtn = el('loadBtn'), reloadBtn = el('reloadBtn'), jsonInput = el('jsonInput'), statusMsg = el('statusMsg');
+const statusMsg = el('statusMsg');
+const versionSelect = el('versionSelect');
 const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
 const playerBox = el('playerBox');
 const genBtn = el('genBtn'), qtyInput = el('qty');
 const filterPanelBody = el('filterPanelBody'), filterCountMsg = el('filterCountMsg');
 const applyFilterBtn = el('applyFilterBtn'), downloadFilteredBtn = el('downloadFilteredBtn');
+const filterBox = el('filterBox'), cardBox = el('cardBox');
+const filterLockInfo = el('filterLockInfo');
 
 const validatorOverlay = el('validatorOverlay');
 const validateBtn = el('validateBtn');
@@ -295,10 +283,12 @@ let order = [];   // índices restantes por sortear
 let drawn = [];   // {item, index} ya salidos
 let popupTab = null;
 let rotationIndex = 0; // puntero del modo equilibrado, gira entre CATEGORY_ROTATION
+let currentVersionUrl = null;
 
 // ========= localStorage persistence =========
 const LS_KEY = 'bingoState_vdr_v2';
 const LS_FILTER_KEY = 'bingoFilter_vdr_v1';
+const LS_VERSION_KEY = 'bingoVersion_vdr_v1';
 
 function trackSig(t){ return t.id ? String(t.id) : (t.title + '\x00' + t.artist); }
 
@@ -334,6 +324,7 @@ function clearFilter(){
 function saveState(){
   try{
     localStorage.setItem(LS_KEY, JSON.stringify({
+      version: currentVersionUrl,
       drawn: drawn.map(d => ({index: d.index})),
       order: order,
       rotationIndex: rotationIndex
@@ -346,6 +337,7 @@ function restoreState(trackList){
     if(!raw) return false;
     const saved = JSON.parse(raw);
     if(!saved || !Array.isArray(saved.drawn) || !Array.isArray(saved.order)) return false;
+    if(saved.version !== currentVersionUrl) return false;
     const max = trackList.length;
     const restoredDrawn = saved.drawn.filter(d => Number.isInteger(d.index) && d.index >= 0 && d.index < max);
     const restoredOrder = saved.order.filter(i => Number.isInteger(i) && i >= 0 && i < max);
@@ -566,6 +558,7 @@ function updateUI(){
       openInSideTab(a.href);
     }, {passive:false});
   });
+  updateSectionLock();
 }
 
 function pill(item, index, used, current=false){
@@ -867,23 +860,76 @@ function applyLoadedJson(json, label, tryRestore){
   }
 }
 
-function loadFromTextarea(){
+// ========= selección y carga de versión =========
+async function findAvailableVersions(maxV = 20){
+  const results = await Promise.all(
+    Array.from({length: maxV}, (_, i) => {
+      const v = i + 1;
+      return fetch(`./${BASE_LIST_NAME}_v${v}.json`, {method: 'HEAD', cache: 'no-store'})
+        .then(r => r.ok ? v : null)
+        .catch(() => null);
+    })
+  );
+  return results.filter(v => v !== null);
+}
+
+function buildVersionSelect(versions, selectedV){
+  versionSelect.innerHTML = versions.map(v =>
+    `<option value="${v}"${v === selectedV ? ' selected' : ''}>Lista v${v}</option>`
+  ).join('');
+}
+
+async function loadVersionUrl(url, tryRestore){
   try{
-    const json = JSON.parse(jsonInput.value.trim());
-    applyLoadedJson(json, "JSON pegado", false);
+    const res = await fetch(url, {cache: "no-store"});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    applyLoadedJson(json, url.replace('./', ''), tryRestore);
   }catch(e){
-    status("Error al cargar JSON: " + e.message);
+    status(`No se pudo cargar ${url}: ${e.message}. Pega un JSON manualmente abajo.`);
   }
 }
 
-async function loadOfficialList(tryRestore){
-  try{
-    const res = await fetch(OFFICIAL_LIST_URL, {cache: "no-store"});
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    applyLoadedJson(json, "lista oficial", tryRestore);
-  }catch(e){
-    status(`No se pudo cargar ${OFFICIAL_LIST_URL}: ${e.message}. Pega un JSON manualmente abajo.`);
+async function initVersionSelector(){
+  status('Buscando listas disponibles…');
+  const versions = await findAvailableVersions();
+  if(!versions.length){
+    status('No se encontró ningún archivo de lista. Pega un JSON manualmente.');
+    return;
+  }
+  const savedV = parseInt(localStorage.getItem(LS_VERSION_KEY) || '', 10);
+  const selectedV = (savedV && versions.includes(savedV)) ? savedV : Math.max(...versions);
+  buildVersionSelect(versions, selectedV);
+  currentVersionUrl = `./${BASE_LIST_NAME}_v${selectedV}.json`;
+
+  versionSelect.addEventListener('change', async function(){
+    const newV = parseInt(this.value, 10);
+    const newUrl = `./${BASE_LIST_NAME}_v${newV}.json`;
+    if(drawn.length > 0){
+      if(!confirm(`Cambiar de versión reiniciará la partida actual (${drawn.length} bola${drawn.length > 1 ? 's' : ''} ya sacada${drawn.length > 1 ? 's' : ''}). ¿Continuar?`)){
+        this.value = String(parseInt(currentVersionUrl.match(/_v(\d+)\.json$/)?.[1] || '1', 10));
+        return;
+      }
+    }
+    currentVersionUrl = newUrl;
+    localStorage.setItem(LS_VERSION_KEY, String(newV));
+    await loadVersionUrl(newUrl, false);
+  });
+
+  await loadVersionUrl(currentVersionUrl, true);
+}
+
+function updateSectionLock(){
+  const locked = drawn.length > 0;
+  [filterBox, cardBox].forEach(box => {
+    box.classList.toggle('game-locked', locked);
+    if(locked && box.open) box.open = false;
+  });
+  versionSelect.disabled = locked;
+  if(locked && tracks.length < fullCatalog.length){
+    filterLockInfo.textContent = ` ${tracks.length}/${fullCatalog.length} bolas`;
+  } else {
+    filterLockInfo.textContent = '';
   }
 }
 
@@ -912,8 +958,6 @@ cbEmbed.addEventListener('change', ()=>{
   const last = drawn.length ? drawn[drawn.length-1] : null;
   updatePlayer(last ? last.item : null);
 });
-loadBtn.addEventListener('click', loadFromTextarea);
-reloadBtn.addEventListener('click', ()=> loadOfficialList(false));
 applyFilterBtn.addEventListener('click', applyFilter);
 downloadFilteredBtn.addEventListener('click', downloadFilteredJson);
 
@@ -951,7 +995,7 @@ genBtn.addEventListener('click', ()=>{
 
 // ========= arranque =========
 setCurrent();
-loadOfficialList(true);
+initVersionSelector();
 
 // ========= PDF helpers =========
 async function ensureJsPDF(){
@@ -984,7 +1028,8 @@ function drawCard(doc, trackList, cardNumber, numbers, x, y, opts={}){
     bigNumberSize=22,
     textSize=8,
     lineGap=2,
-    radius=2
+    radius=2,
+    versionLabel=''
   } = opts;
 
   doc.setDrawColor(20);
@@ -1055,6 +1100,13 @@ function drawCard(doc, trackList, cardNumber, numbers, x, y, opts={}){
       doc.setFont("helvetica","bold");
     }
   }
+  if(versionLabel){
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(6);
+    doc.setTextColor(160, 160, 160);
+    doc.text(versionLabel, x + cardWidth - 3, y + cardHeight - 2, {align:'right'});
+    doc.setTextColor(0);
+  }
 }
 
 // Genera los cartones en PDF. Las bolas con "fixedBall" (p. ej. la 24, el pasodoble de San Juan)
@@ -1091,6 +1143,13 @@ async function generateCardsPDF(trackList, qty){
 
   const randomCount = cellsPerCard - fixedNumbers.length;
 
+  const vMatch = currentVersionUrl?.match(/_v(\d+)\.json$/);
+  const isFiltered = trackList.length < fullCatalog.length;
+  const countLabel = isFiltered
+    ? `${trackList.length}/${fullCatalog.length} bolas (filtrada)`
+    : `${trackList.length} bolas`;
+  const versionLabel = vMatch ? `Lista v${vMatch[1]} · ${countLabel}` : countLabel;
+
   let cardNo = 1;
   for(let i=0;i<qty;i++){
     const poolCopy = pool.slice();
@@ -1100,7 +1159,7 @@ async function generateCardsPDF(trackList, qty){
 
     const isTop = (i%2===0);
     const posY = isTop ? topY : bottomY;
-    drawCard(doc, trackList, cardNo, pick, marginX, posY);
+    drawCard(doc, trackList, cardNo, pick, marginX, posY, {versionLabel});
 
     if(!isTop && i<qty-1){
       doc.addPage();
@@ -1116,7 +1175,7 @@ function openValidator(){
   validatorOverlay.style.display = 'flex';
   validatorOverlay.setAttribute('aria-hidden','false');
   const inputs = [...valGrid.querySelectorAll('input')];
-  inputs.forEach(i=>{ i.value=''; i.classList.remove('invalid'); });
+  inputs.forEach(i=>{ i.value=''; i.classList.remove('invalid','hit','miss'); });
   inputs[0].focus();
 }
 function closeValidator(){
@@ -1140,7 +1199,24 @@ function parseTicketInputs(){
 }
 function validateTicket(){
   const inputs = [...valGrid.querySelectorAll('input')];
-  inputs.forEach(i => i.classList.remove('invalid'));
+  inputs.forEach(i => i.classList.remove('invalid','hit','miss'));
+
+  // Redistribuir pegado CSV si procede, antes de colorear
+  const ticket = parseTicketInputs();
+  const drawnNums = new Set(drawn.map(d=>d.index+1));
+  const max = tracks.length;
+
+  // Colorear casillas rellenas ya
+  inputs.forEach(i => {
+    const v = i.value.trim();
+    if(v === '') return;
+    const n = parseInt(v, 10);
+    if(Number.isFinite(n) && n >= 1 && n <= max){
+      i.classList.add(drawnNums.has(n) ? 'hit' : 'miss');
+    } else {
+      i.classList.add('invalid');
+    }
+  });
 
   const emptyInputs = inputs.filter(i => i.value.trim() === '');
   if(emptyInputs.length > 0){
@@ -1151,13 +1227,12 @@ function validateTicket(){
     return;
   }
 
-  const ticket = parseTicketInputs();
   if(ticket.length !== 8){
     valResult.className = 'result err';
     valResult.textContent = 'Necesitas 8 números válidos y distintos del cartón.';
     return;
   }
-  const drawnNums = new Set(drawn.map(d=>d.index+1));
+
   const notOut = ticket.filter(n => !drawnNums.has(n)).sort((a,b)=>a-b);
   if(notOut.length === 0){
     valResult.className = 'result ok';
@@ -1179,13 +1254,14 @@ valClose.addEventListener('click', closeValidator);
 validatorOverlay.addEventListener('click', (e)=>{ if(e.target === validatorOverlay) closeValidator(); });
 valCheck.addEventListener('click', validateTicket);
 valClear.addEventListener('click', ()=>{
-  [...valGrid.querySelectorAll('input')].forEach(i=>{ i.value=''; i.classList.remove('invalid'); });
+  [...valGrid.querySelectorAll('input')].forEach(i=>{ i.value=''; i.classList.remove('invalid','hit','miss'); });
   valResult.textContent='';
   valGrid.querySelector('input')?.focus();
 });
 valGrid.addEventListener('input', (e)=>{
   if(e.target.tagName === 'INPUT'){
     const v = e.target.value.trim();
+    e.target.classList.remove('hit','miss');
     if(v !== '' && !/^\d+$/.test(v)){
       e.target.classList.add('invalid');
     } else {
