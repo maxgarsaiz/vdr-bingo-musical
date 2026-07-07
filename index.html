@@ -935,7 +935,11 @@ function updateSectionLock(){
 
 // ========= eventos =========
 drawBtn.addEventListener('click', drawOne);
-resetBtn.addEventListener('click', resetAll);
+resetBtn.addEventListener('click', () => {
+  if(drawn.length > 0 && order.length > 0 &&
+     !confirm(`Hay ${drawn.length} bola${drawn.length > 1 ? 's' : ''} sacada${drawn.length > 1 ? 's' : ''} y la partida no ha terminado. ¿Reiniciar?`)) return;
+  resetAll();
+});
 
 // Exclusividad mutua: categoría fija <-> modo equilibrado
 [cbJovenes, cbMayores, cbBisagra].forEach(cb => {
