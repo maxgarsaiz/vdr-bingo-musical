@@ -1,4 +1,4 @@
-<!doctype html>
+p<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -116,6 +116,11 @@ select.btn{appearance:auto;padding-right:8px}
       <button id="validateBtn" class="btn">Validar boleto</button>
       <button id="resetBtn" class="btn">Reiniciar</button>
       <select id="versionSelect" class="btn" title="Versión de la lista cargada"></select>
+      <select id="servicePreference" class="btn" title="Servicio preferido para reproducir">
+        <option value="applemusic">Preferir Apple Music</option>
+        <option value="youtube">Preferir YouTube</option>
+        <option value="spotify">Preferir Spotify</option>
+      </select>
       <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbAutoOpen"> Abrir enlace al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
@@ -170,6 +175,9 @@ select.btn{appearance:auto;padding-right:8px}
         <strong>Aplica el filtro antes de generar los cartones</strong> — cambiarlo después invalida la numeración de cualquier cartón ya impreso.
       </p>
       <p class="msg" id="filterCountMsg">0 de 0 canciones activas.</p>
+      <div class="row">
+        <button id="addSongBtn" class="btn primary">+ Añadir canción</button>
+      </div>
       <div id="filterPanelBody"></div>
       <div class="row">
         <button id="applyFilterBtn" class="btn primary">Aplicar filtro (reinicia la partida)</button>
@@ -220,12 +228,67 @@ select.btn{appearance:auto;padding-right:8px}
   </div>
 </div>
 
+<!-- ===== Modal Editor de canción ===== -->
+<div class="modalOverlay" id="songEditorOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="songEditorTitle">
+    <header>
+      <h3 id="songEditorTitle">Añadir canción</h3>
+      <button id="songEditorClose" class="btn">Cerrar</button>
+    </header>
+    <div class="content">
+      <div class="row" style="flex-direction:column;gap:10px;align-items:stretch">
+        <label class="msg">Título*
+          <input id="seTitle" type="text" class="btn" style="width:100%;text-align:left" placeholder="Título de la canción">
+        </label>
+        <label class="msg">Artista*
+          <input id="seArtist" type="text" class="btn" style="width:100%;text-align:left" placeholder="Artista">
+        </label>
+        <label class="msg">Álbum
+          <input id="seAlbum" type="text" class="btn" style="width:100%;text-align:left" placeholder="Álbum (opcional)">
+        </label>
+        <div class="row" style="gap:10px">
+          <label class="msg" style="flex:1">Género
+            <input id="seGenre" type="text" class="btn" style="width:100%;text-align:left" placeholder="p. ej. pop urbano">
+          </label>
+          <label class="msg" style="flex:1">Década
+            <input id="seDecade" type="text" class="btn" style="width:100%;text-align:left" placeholder="p. ej. 2020s">
+          </label>
+        </div>
+        <div class="msg">Público
+          <div class="row" style="margin-top:4px">
+            <label class="toggle"><input type="checkbox" id="seTagJovenes"> Jóvenes</label>
+            <label class="toggle"><input type="checkbox" id="seTagMayores"> Mayores</label>
+            <label class="toggle"><input type="checkbox" id="seTagBisagra"> Bisagra</label>
+            <label class="toggle"><input type="checkbox" id="seTagTodas"> Todas las edades</label>
+          </div>
+        </div>
+        <label class="msg">URL de Apple Music
+          <input id="seAppleUrl" type="text" class="btn" style="width:100%;text-align:left" placeholder="Pega aquí la URL de music.apple.com">
+        </label>
+        <label class="msg">URL de YouTube
+          <input id="seYoutubeUrl" type="text" class="btn" style="width:100%;text-align:left" placeholder="Pega aquí la URL de youtube.com o youtu.be">
+        </label>
+        <label class="msg">URL de Spotify
+          <input id="seSpotifyUrl" type="text" class="btn" style="width:100%;text-align:left" placeholder="Pega aquí la URL de open.spotify.com">
+        </label>
+        <p class="msg" id="songEditorMsg"></p>
+      </div>
+    </div>
+    <footer>
+      <button id="songEditorDelete" class="btn" style="margin-right:auto;display:none">Eliminar canción</button>
+      <button id="songEditorCancel" class="btn">Cancelar</button>
+      <button id="songEditorSave" class="btn primary">Guardar</button>
+    </footer>
+  </div>
+</div>
+
 <script>
 // ========= constantes de servicios =========
 const APPLE_BASE = "https://music.apple.com/es/song/";
 const BASE_LIST_NAME = "bingo_musical_vdr";
 const CATEGORY_ROTATION = ["jovenes", "mayores", "bisagra", "todas-edades"];
-const SERVICE_PRIORITY = ["applemusic", "spotify", "youtube"];
+const DEFAULT_SERVICE_ORDER = ["applemusic", "youtube", "spotify"];
+let SERVICE_PRIORITY = DEFAULT_SERVICE_ORDER.slice();
 
 const SERVICE_META = {
   applemusic: {
@@ -261,6 +324,7 @@ const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbSound = el('cbSound'
 const cbJovenes = el('cbJovenes'), cbMayores = el('cbMayores'), cbBisagra = el('cbBisagra');
 const statusMsg = el('statusMsg');
 const versionSelect = el('versionSelect');
+const servicePreference = el('servicePreference');
 const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
 const playerBox = el('playerBox');
 const genBtn = el('genBtn'), qtyInput = el('qty');
@@ -289,6 +353,29 @@ let currentVersionUrl = null;
 const LS_KEY = 'bingoState_vdr_v2';
 const LS_FILTER_KEY = 'bingoFilter_vdr_v1';
 const LS_VERSION_KEY = 'bingoVersion_vdr_v1';
+const LS_SERVICE_PREF_KEY = 'bingoServicePref_vdr_v1';
+
+function applyServicePreference(preferred){
+  SERVICE_PRIORITY = [preferred, ...DEFAULT_SERVICE_ORDER.filter(s => s !== preferred)];
+}
+
+function initServicePreference(){
+  let saved = null;
+  try{ saved = localStorage.getItem(LS_SERVICE_PREF_KEY); }catch(e){}
+  const preferred = DEFAULT_SERVICE_ORDER.includes(saved) ? saved : DEFAULT_SERVICE_ORDER[0];
+  servicePreference.value = preferred;
+  applyServicePreference(preferred);
+
+  servicePreference.addEventListener('change', () => {
+    applyServicePreference(servicePreference.value);
+    try{ localStorage.setItem(LS_SERVICE_PREF_KEY, servicePreference.value); }catch(e){}
+    // Refrescar la bola actual, las listas y el panel de filtro para reflejar el nuevo orden
+    const last = drawn.length ? drawn[drawn.length - 1] : null;
+    setCurrent(last ? last.item : null, last ? last.index : null);
+    updateUI();
+    if(fullCatalog.length) renderFilterPanel();
+  });
+}
 
 function trackSig(t){ return t.id ? String(t.id) : (t.title + '\x00' + t.artist); }
 
@@ -460,6 +547,28 @@ function arrangeWithFixedBalls(normTracks){
     }
   }
   return result;
+}
+
+// ========= parseo de URLs para el editor de canciones =========
+function parseAppleMusicUrl(url){
+  if(!url) return null;
+  let m = url.match(/[?&]i=(\d+)/);
+  if(m) return m[1];
+  m = url.match(/\/song\/[^\/]*\/(\d+)/);
+  if(m) return m[1];
+  m = url.match(/(\d{5,})(?:[?#]|$)/);
+  if(m) return m[1];
+  return null;
+}
+function parseSpotifyUrl(url){
+  if(!url) return null;
+  const m = url.match(/open\.spotify\.com\/(?:intl-\w+\/)?track\/([A-Za-z0-9]+)/);
+  return m ? m[1] : null;
+}
+function parseYoutubeUrl(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
 }
 
 function preferredService(linksObj){
@@ -728,6 +837,8 @@ function renderFilterPanel(){
           <span>${escapeHtml(t.title)} <small>· ${escapeHtml(t.artist||'')}</small></span>
         </label>
         ${filterServiceLinksHtml ? `<div class="pill-links">${filterServiceLinksHtml}</div>` : ''}
+        <button type="button" class="btn edit-song-btn" data-idx="${idx}" title="Editar canción" style="padding:4px 8px;font-size:12px">✏️</button>
+        ${locked ? '' : `<button type="button" class="btn del-song-btn" data-idx="${idx}" title="Eliminar canción" style="padding:4px 8px;font-size:12px">🗑️</button>`}
       </div>`;
     });
     html += `</div></div>`;
@@ -748,6 +859,19 @@ function renderFilterPanel(){
       const idx = parseInt(cb.dataset.idx, 10);
       fullCatalog[idx].active = cb.checked;
       updateFilterCount();
+    });
+  });
+
+  filterPanelBody.querySelectorAll('.edit-song-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      openSongEditor(idx);
+    });
+  });
+  filterPanelBody.querySelectorAll('.del-song-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      deleteSong(idx);
     });
   });
 }
@@ -794,7 +918,7 @@ function downloadFilteredJson(){
     if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Descargar el JSON filtrado de todos modos?`)) return;
   }
   const payload = {
-    version: 5,
+    version: (currentVersionUrl?.match(/_v(\d+)\.json$/)?.[1]) ? parseInt(currentVersionUrl.match(/_v(\d+)\.json$/)[1], 10) : 2,
     lists: [{ id: "applemusic-vdr", service: "applemusic", name: "Bingo Musical VDR (filtrado)", url: null }],
     tracks: fullCatalog.map(t => ({
       id: t.id,
@@ -822,6 +946,142 @@ function downloadFilteredJson(){
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+// ========= EDITOR DE CANCIONES =========
+const songEditorOverlay = el('songEditorOverlay');
+const songEditorTitle = el('songEditorTitle');
+const songEditorClose = el('songEditorClose');
+const songEditorCancel = el('songEditorCancel');
+const songEditorSave = el('songEditorSave');
+const songEditorDelete = el('songEditorDelete');
+const songEditorMsg = el('songEditorMsg');
+const addSongBtn = el('addSongBtn');
+const seTitle = el('seTitle'), seArtist = el('seArtist'), seAlbum = el('seAlbum');
+const seGenre = el('seGenre'), seDecade = el('seDecade');
+const seTagJovenes = el('seTagJovenes'), seTagMayores = el('seTagMayores'), seTagBisagra = el('seTagBisagra'), seTagTodas = el('seTagTodas');
+const seAppleUrl = el('seAppleUrl'), seYoutubeUrl = el('seYoutubeUrl'), seSpotifyUrl = el('seSpotifyUrl');
+
+let editingIdx = null; // null = añadiendo canción nueva; número = editando fullCatalog[editingIdx]
+
+function nextSongId(){
+  return 't' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+function openSongEditor(idx){
+  editingIdx = (typeof idx === 'number') ? idx : null;
+  songEditorMsg.textContent = '';
+  const t = editingIdx !== null ? fullCatalog[editingIdx] : null;
+
+  songEditorTitle.textContent = t ? 'Editar canción' : 'Añadir canción';
+  seTitle.value = t ? (t.title || '') : '';
+  seArtist.value = t ? (t.artist || '') : '';
+  seAlbum.value = t ? (t.album || '') : '';
+  seGenre.value = t ? (t.genre || '') : '';
+  seDecade.value = t ? (t.decade || '') : '';
+  const tags = t ? (t.tags || []) : [];
+  seTagJovenes.checked = tags.includes('jovenes');
+  seTagMayores.checked = tags.includes('mayores');
+  seTagBisagra.checked = tags.includes('bisagra');
+  seTagTodas.checked = tags.includes('todas-edades');
+  seAppleUrl.value = t?.links?.applemusic?.url || '';
+  seYoutubeUrl.value = t?.links?.youtube?.url || '';
+  seSpotifyUrl.value = t?.links?.spotify?.url || '';
+
+  songEditorDelete.style.display = (t && !t.fixedBall) ? 'inline-block' : 'none';
+
+  songEditorOverlay.style.display = 'flex';
+  songEditorOverlay.setAttribute('aria-hidden', 'false');
+  seTitle.focus();
+}
+
+function closeSongEditor(){
+  songEditorOverlay.style.display = 'none';
+  songEditorOverlay.setAttribute('aria-hidden', 'true');
+  editingIdx = null;
+}
+
+function saveSongEditor(){
+  const title = seTitle.value.trim();
+  const artist = seArtist.value.trim();
+  if(!title || !artist){
+    songEditorMsg.textContent = 'El título y el artista son obligatorios.';
+    return;
+  }
+
+  const links = {};
+  const appleUrl = seAppleUrl.value.trim();
+  const youtubeUrl = seYoutubeUrl.value.trim();
+  const spotifyUrl = seSpotifyUrl.value.trim();
+
+  if(appleUrl){
+    const id = parseAppleMusicUrl(appleUrl);
+    if(!id){ songEditorMsg.textContent = 'No se reconoce la URL de Apple Music.'; return; }
+    links.applemusic = { id, url: appleUrl };
+  }
+  if(youtubeUrl){
+    const id = parseYoutubeUrl(youtubeUrl);
+    if(!id){ songEditorMsg.textContent = 'No se reconoce la URL de YouTube.'; return; }
+    links.youtube = { id, url: youtubeUrl };
+  }
+  if(spotifyUrl){
+    const id = parseSpotifyUrl(spotifyUrl);
+    if(!id){ songEditorMsg.textContent = 'No se reconoce la URL de Spotify.'; return; }
+    links.spotify = { id, url: spotifyUrl };
+  }
+
+  const tags = [];
+  if(seTagJovenes.checked) tags.push('jovenes');
+  if(seTagMayores.checked) tags.push('mayores');
+  if(seTagBisagra.checked) tags.push('bisagra');
+  if(seTagTodas.checked) tags.push('todas-edades');
+
+  if(editingIdx !== null){
+    const existing = fullCatalog[editingIdx];
+    existing.title = title;
+    existing.artist = artist;
+    existing.album = seAlbum.value.trim();
+    existing.genre = seGenre.value.trim() || null;
+    existing.decade = seDecade.value.trim() || null;
+    existing.tags = tags;
+    existing.links = links;
+  } else {
+    fullCatalog.push({
+      id: nextSongId(),
+      title, artist,
+      album: seAlbum.value.trim(),
+      genre: seGenre.value.trim() || null,
+      decade: seDecade.value.trim() || null,
+      tags,
+      active: true,
+      links
+    });
+  }
+
+  closeSongEditor();
+  renderFilterPanel();
+  status(editingIdx !== null ? 'Canción actualizada.' : 'Canción añadida al catálogo.');
+}
+
+function deleteSong(idx){
+  const t = fullCatalog[idx];
+  if(!t || t.fixedBall) return;
+  if(!confirm(`¿Eliminar "${t.title}" — ${t.artist} del catálogo? Esta acción no se puede deshacer (pero puedes descargar el JSON antes si quieres conservarla).`)) return;
+  fullCatalog.splice(idx, 1);
+  renderFilterPanel();
+  status('Canción eliminada del catálogo.');
+}
+
+addSongBtn.addEventListener('click', () => openSongEditor(null));
+songEditorClose.addEventListener('click', closeSongEditor);
+songEditorCancel.addEventListener('click', closeSongEditor);
+songEditorSave.addEventListener('click', saveSongEditor);
+songEditorDelete.addEventListener('click', () => {
+  if(editingIdx === null) return;
+  const idx = editingIdx;
+  closeSongEditor();
+  deleteSong(idx);
+});
+songEditorOverlay.addEventListener('click', (e) => { if(e.target === songEditorOverlay) closeSongEditor(); });
 
 // ========= carga de la lista =========
 function applyLoadedJson(json, label, tryRestore){
@@ -999,6 +1259,7 @@ genBtn.addEventListener('click', ()=>{
 
 // ========= arranque =========
 setCurrent();
+initServicePreference();
 initVersionSelector();
 
 // ========= PDF helpers =========
