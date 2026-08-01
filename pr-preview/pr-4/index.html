@@ -1,4 +1,4 @@
-p<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -638,6 +638,13 @@ function updatePlayer(item=null){
     playerBox.classList.remove('visible');
     return;
   }
+  // Si "Abrir enlace al sacar bola" está activo, esa pestaña ya reproduce con autoplay —
+  // no mostramos también el reproductor embebido, para evitar que suene dos veces a la vez.
+  if(cbAutoOpen && cbAutoOpen.checked){
+    playerBox.innerHTML = `<p class="msg" style="margin:0">▶️ Reproduciéndose en la pestaña lateral (para evitar sonido duplicado, el reproductor embebido se desactiva mientras "Abrir enlace al sacar bola" esté activo).</p>`;
+    playerBox.classList.add('visible');
+    return;
+  }
   const service = preferredService(item.links);
   const l = service && item.links[service];
   const safeId = l && /^[\w-]+$/.test(l.id || '') ? l.id : '';
@@ -1219,6 +1226,10 @@ cbBalanced.addEventListener('change', () => {
 });
 
 cbEmbed.addEventListener('change', ()=>{
+  const last = drawn.length ? drawn[drawn.length-1] : null;
+  updatePlayer(last ? last.item : null);
+});
+cbAutoOpen.addEventListener('change', ()=>{
   const last = drawn.length ? drawn[drawn.length-1] : null;
   updatePlayer(last ? last.item : null);
 });

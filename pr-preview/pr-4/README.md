@@ -32,6 +32,7 @@ Aplicación web para presentar y sortear el Bingo Musical de Valdemoro del Rey. 
 ### Reproductor embebido
 - Al sacar cada bola se muestra un reproductor embebido con la canción, según el servicio preferido configurado (o el siguiente disponible).
 - También puede abrirse en una pestaña lateral con reproducción automática.
+- Si "Abrir enlace al sacar bola" está activo, el reproductor embebido se desactiva automáticamente (muestra un aviso en su lugar) para evitar que la canción suene dos veces a la vez, una en la pestaña lateral y otra en el reproductor embebido. Al desmarcar esa opción, el reproductor embebido vuelve a activarse al instante.
 - El reproductor puede ocultarse desde los controles del encabezado.
 - Cada canción, tanto en las listas de "ya salieron"/"pendientes" como en el panel de filtro, muestra iconos compactos con enlace directo a cada servicio disponible.
 
