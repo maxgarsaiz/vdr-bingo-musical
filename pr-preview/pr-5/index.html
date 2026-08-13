@@ -1,0 +1,1585 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Bingo Musical Valdemoro del Rey</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎵</text></svg>">
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<style>
+:root{
+  --bg:#0f1220; --card:#171a2b; --muted:#aab3c5; --text:#eaf0ff; --accent:#4cc9f0; --ok:#38d39f; --warn:#ffbe0b; --danger:#ef476f;
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#0b0e1a 0%,#11162b 100%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,'Helvetica Neue',Arial}
+.wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid #1f2340;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+header.card{padding:18px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header h1{font-size:20px;margin:0}
+header .controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid #2d3156;background:#1b1f39;color:var(--text);padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#001220}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.toggle{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.main{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
+@media (max-width:900px){.main{grid-template-columns:1fr}}
+.now.card{padding:18px}
+.now h2{margin:0 0 8px 0;font-size:16px;color:var(--muted);display:flex;align-items:center;gap:12px}
+.counters{font-size:13px;color:var(--muted);display:flex;gap:10px}
+.songBox{display:flex;gap:16px;align-items:flex-start;justify-content:space-between}
+.songMeta{min-height:72px;flex:1}
+.title{font-size:22px;font-weight:800;margin:0}
+.artist{margin:6px 0 0 0;color:var(--muted)}
+.ball{display:inline-flex;align-items:center;justify-content:center;min-width:78px;height:78px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #fff, #eaeaea 60%, #d0d0d0);color:#111;border:2px solid #cfcfcf;
+  font-weight:900;font-size:30px;box-shadow:inset 0 2px 10px rgba(0,0,0,.3), 0 10px 18px rgba(0,0,0,.25)}
+.links{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.linkIcon{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid #2d3156;border-radius:8px;text-decoration:none;color:var(--text);background:#151935}
+.linkIcon:hover{border-color:var(--accent)}
+.linkIcon svg{width:18px;height:18px}
+.lists{display:grid;gap:16px}
+.list.card{padding:14px 14px 8px}
+.list h3{margin:0 0 10px 0;font-size:16px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media (max-width:700px){.grid{grid-template-columns:1fr}}
+.pill{padding:8px 10px;background:#141835;border:1px solid #2b2f52;border-radius:8px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.pill small{color:var(--muted)}
+.pill.used{opacity:.55}
+.pill.fixed{border-color:var(--warn)}
+.pill-links{display:flex;gap:4px;align-items:center;flex-shrink:0;margin-left:auto}
+.pill-links a{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;border:1px solid #2b2f52;background:#151935;color:var(--text);text-decoration:none;flex-shrink:0}
+.pill-links a:hover{border-color:var(--accent)}
+.pill-links svg{width:13px;height:13px}
+details.loader{margin-top:16px}
+details.loader>summary{cursor:pointer;user-select:none;padding:14px 16px}
+.loader .panel{padding:0 16px 16px}
+.loader .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.msg{margin-top:8px;font-size:13px;color:var(--muted)}
+/* ===== Modal Validación ===== */
+.modalOverlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; align-items:center; justify-content:center; z-index:9999;
+}
+.modal{background:var(--card); color:var(--text); border:1px solid #2d3156; border-radius:12px; width:min(620px,92vw); box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.modal header{padding:14px 16px; border-bottom:1px solid #2b2f52; display:flex; align-items:center; justify-content:space-between}
+.modal header h3{margin:0; font-size:18px}
+.modal .content{padding:16px}
+.grid8{display:grid; grid-template-columns:repeat(4,1fr); gap:10px}
+.grid8 input{width:100%; padding:10px; border-radius:8px; border:1px solid #2b2f52; background:#0f1330; color:var(--text); text-align:center; font-weight:700}
+.grid8 input.invalid{border-color:var(--danger);background:#1a0a10;box-shadow:0 0 0 1px var(--danger) inset}
+.grid8 input.hit{border-color:var(--ok);background:#091a0f;box-shadow:0 0 0 1px var(--ok) inset}
+.grid8 input.miss{border-color:var(--danger);background:#1a0a10;box-shadow:0 0 0 1px var(--danger) inset}
+.modal footer{padding:12px 16px; border-top:1px solid #2b2f52; display:flex; gap:10px; justify-content:flex-end}
+.note{font-size:12px; color:var(--muted); margin:10px 0 0}
+.result{margin-top:12px; font-size:14px}
+.result.ok{color:var(--ok)}
+.result.err{color:var(--danger)}
+/* ===== Animación de bola ===== */
+@keyframes ballPop{
+  0%{transform:scale(1)}
+  40%{transform:scale(1.3)}
+  70%{transform:scale(.92)}
+  100%{transform:scale(1)}
+}
+.ball.pop{animation:ballPop .45s cubic-bezier(.36,.07,.19,.97) both}
+/* ===== Hint atajo teclado ===== */
+.shortcut-hint{font-size:11px;opacity:.55;font-weight:400;margin-left:4px}
+/* ===== Bola actual destacada en la lista ===== */
+.pill.current{border-color:var(--accent);background:#0a2535;opacity:1!important;box-shadow:0 0 0 1px var(--accent) inset}
+/* ===== Reproductor embebido ===== */
+#playerBox{margin-top:14px;border-radius:10px;overflow:hidden;display:none}
+#playerBox.visible{display:block}
+#playerBox iframe{width:100%;border:0;border-radius:10px;display:block}
+/* ===== Panel de filtro de canciones ===== */
+.filterGroup{margin-top:14px}
+.filterGroup h4{margin:0 0 8px 0;font-size:14px;color:var(--accent)}
+.filterGroup h4 small{color:var(--muted);font-weight:400}
+.filterGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+@media (max-width:700px){.filterGrid{grid-template-columns:1fr}}
+.filterItem{display:flex;align-items:center;gap:8px;padding:6px 8px;background:#141835;border:1px solid #2b2f52;border-radius:8px;font-size:13px}
+.filterItem label{flex:1;display:flex;align-items:center;gap:8px;cursor:pointer;margin:0}
+.filterItem.locked{opacity:.6;border-color:var(--warn)}
+.filterItem.locked label{cursor:not-allowed}
+.filterItem small{color:var(--muted)}
+select.btn{appearance:auto;padding-right:8px}
+.game-locked{opacity:.5;pointer-events:none}
+.game-locked>summary::after{content:" — reinicia la partida para modificar";color:var(--warn);font-size:11px;font-weight:400}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="card">
+    <h1>🎵 Bingo Musical Valdemoro del Rey</h1>
+    <p class="msg" id="statusMsg"></p>
+    <div class="controls">
+      <button id="drawBtn" class="btn primary">Sacar bola <span class="shortcut-hint">[Espacio]</span></button>
+      <button id="validateBtn" class="btn">Validar boleto</button>
+      <button id="resetBtn" class="btn">Reiniciar</button>
+      <select id="versionSelect" class="btn" title="Versión de la lista cargada"></select>
+      <select id="servicePreference" class="btn" title="Servicio preferido para reproducir">
+        <option value="applemusic">Preferir Apple Music</option>
+        <option value="youtube">Preferir YouTube</option>
+        <option value="spotify">Preferir Spotify</option>
+      </select>
+      <label class="toggle"><input type="checkbox" id="cbSound" checked> Voz en off al sacar bola</label>
+      <label class="toggle"><input type="checkbox" id="cbAutoOpen"> Abrir enlace al sacar bola</label>
+      <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
+      <label class="toggle"><input type="checkbox" id="cbBalanced" checked> Modo equilibrado (jóvenes/mayores/bisagra)</label>
+      <label class="toggle"><input type="checkbox" id="cbJovenes"> Solo jóvenes</label>
+      <label class="toggle"><input type="checkbox" id="cbMayores"> Solo mayores</label>
+      <label class="toggle"><input type="checkbox" id="cbBisagra"> Solo bisagra</label>
+    </div>
+  </header>
+
+  <section class="main">
+    <div class="now card">
+      <h2>
+        Última bola
+        <span class="counters">
+          · <strong id="countDrawn">0</strong> salidas
+          · <strong id="countPending">0</strong> pendientes
+          · Total: <strong id="countTotal">0</strong>
+        </span>
+      </h2>
+      <div class="songBox">
+        <div class="ball" id="ballNum">–</div>
+        <div class="songMeta">
+          <p class="title" id="songTitle">—</p>
+          <p class="artist" id="songArtist">—</p>
+          <div class="links" id="songLinks"></div>
+          <div id="playerBox"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lists">
+      <div class="list card">
+        <h3>Ya salieron</h3>
+        <div id="drawnList" class="grid"></div>
+      </div>
+      <div class="list card">
+        <h3>Pendientes</h3>
+        <div id="pendingList" class="grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filtro de canciones -->
+  <details class="loader card" id="filterBox">
+    <summary>🎚️ Filtrar canciones<span id="filterLockInfo" class="shortcut-hint"></span></summary>
+    <div class="panel">
+      <p class="msg">
+        Marca o desmarca canciones para decidir cuáles entran en juego esta edición.
+        Las bolas se renumeran del 1 al total de canciones activas (sin huecos).
+        La canción con candado 🔒 está fijada a una bola concreta y no se puede desactivar aquí.
+        <strong>Aplica el filtro antes de generar los cartones</strong> — cambiarlo después invalida la numeración de cualquier cartón ya impreso.
+      </p>
+      <p class="msg" id="filterCountMsg">0 de 0 canciones activas.</p>
+      <div class="row">
+        <button id="addSongBtn" class="btn primary">+ Añadir canción</button>
+      </div>
+      <div id="filterPanelBody"></div>
+      <div class="row">
+        <button id="applyFilterBtn" class="btn primary">Aplicar filtro (reinicia la partida)</button>
+        <button id="downloadFilteredBtn" class="btn">Descargar JSON filtrado</button>
+      </div>
+      <p class="msg">Descarga el JSON con este filtro aplicado y súbelo como archivo oficial (p. ej. a Google Drive) para que el dispositivo donde generes cartones y el dispositivo donde sortees usen exactamente el mismo catálogo.</p>
+    </div>
+  </details>
+
+  <!-- Generador de cartones -->
+  <details class="loader card" id="cardBox">
+    <summary>🧾 Generar cartones (PDF)</summary>
+    <div class="row">
+      <label>Cantidad: <input id="qty" type="number" min="2" max="100" step="2" value="40" style="width:80px"></label>
+      <button id="genBtn" class="btn primary">Generar cartones (PDF)</button>
+      <span class="msg">A4 vertical · 2 cartones por página · 4×2 · las bolas fijas (p. ej. la 24) salen siempre en todos los cartones</span>
+    </div>
+    <p class="msg">Usa la lista actualmente cargada arriba.</p>
+  </details>
+</div>
+
+<!-- ===== Modal Validación ===== -->
+<div class="modalOverlay" id="validatorOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="valTitle">
+    <header>
+      <h3 id="valTitle">Validar boleto (8 números)</h3>
+      <button id="valClose" class="btn">Cerrar</button>
+    </header>
+    <div class="content">
+      <p class="msg">Introduce los 8 números del cartón. Tip: puedes pegar “1, 8, 12, 24, 33, 41, 55, 72” en el primer campo y se reparten solos.</p>
+      <div class="grid8" id="valGrid">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+        <input inputmode="numeric" pattern="[0-9]*" maxlength="3">
+      </div>
+      <p class="note">Se valida contra las bolas realmente <strong>ya salidas</strong> en esta sesión.</p>
+      <div id="valResult" class="result"></div>
+    </div>
+    <footer>
+      <button id="valClear" class="btn">Limpiar</button>
+      <button id="valCheck" class="btn primary">Validar</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ===== Modal Editor de canción ===== -->
+<div class="modalOverlay" id="songEditorOverlay" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="songEditorTitle">
+    <header>
+      <h3 id="songEditorTitle">Añadir canción</h3>
+      <button id="songEditorClose" class="btn">Cerrar</button>
+    </header>
+    <div class="content">
+      <div class="row" style="flex-direction:column;gap:10px;align-items:stretch">
+        <label class="msg">Título*
+          <input id="seTitle" type="text" class="btn" style="width:100%;text-align:left" placeholder="Título de la canción">
+        </label>
+        <label class="msg">Artista*
+          <input id="seArtist" type="text" class="btn" style="width:100%;text-align:left" placeholder="Artista">
+        </label>
+        <label class="msg">Álbum
+          <input id="seAlbum" type="text" class="btn" style="width:100%;text-align:left" placeholder="Álbum (opcional)">
+        </label>
+        <div class="row" style="gap:10px">
+          <label class="msg" style="flex:1">Género
+            <input id="seGenre" type="text" class="btn" style="width:100%;text-align:left" placeholder="p. ej. pop urbano">
+          </label>
+          <label class="msg" style="flex:1">Década
+            <input id="seDecade" type="text" class="btn" style="width:100%;text-align:left" placeholder="p. ej. 2020s">
+          </label>
+        </div>
+        <div class="msg">Público
+          <div class="row" style="margin-top:4px">
+            <label class="toggle"><input type="checkbox" id="seTagJovenes"> Jóvenes</label>
+            <label class="toggle"><input type="checkbox" id="seTagMayores"> Mayores</label>
+            <label class="toggle"><input type="checkbox" id="seTagBisagra"> Bisagra</label>
+            <label class="toggle"><input type="checkbox" id="seTagTodas"> Todas las edades</label>
+          </div>
+        </div>
+        <label class="msg">URL de Apple Music
+          <input id="seAppleUrl" type="text" class="btn" style="width:100%;text-align:left" placeholder="Pega aquí la URL de music.apple.com">
+        </label>
+        <label class="msg">URL de YouTube
+          <input id="seYoutubeUrl" type="text" class="btn" style="width:100%;text-align:left" placeholder="Pega aquí la URL de youtube.com o youtu.be">
+        </label>
+        <label class="msg">URL de Spotify
+          <input id="seSpotifyUrl" type="text" class="btn" style="width:100%;text-align:left" placeholder="Pega aquí la URL de open.spotify.com">
+        </label>
+        <p class="msg" id="songEditorMsg"></p>
+      </div>
+    </div>
+    <footer>
+      <button id="songEditorDelete" class="btn" style="margin-right:auto;display:none">Eliminar canción</button>
+      <button id="songEditorCancel" class="btn">Cancelar</button>
+      <button id="songEditorSave" class="btn primary">Guardar</button>
+    </footer>
+  </div>
+</div>
+
+<script>
+// ========= constantes de servicios =========
+const APPLE_BASE = "https://music.apple.com/es/song/";
+const BASE_LIST_NAME = "bingo_musical_vdr";
+const CATEGORY_ROTATION = ["jovenes", "mayores", "bisagra", "todas-edades"];
+const DEFAULT_SERVICE_ORDER = ["applemusic", "youtube", "spotify"];
+let SERVICE_PRIORITY = DEFAULT_SERVICE_ORDER.slice();
+
+const SERVICE_META = {
+  applemusic: {
+    label: "Apple Music",
+    icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.365 1.43c0 1.14-.46 2.22-1.21 3.02-.77.83-2.04 1.48-3.13 1.48-.06-1.16.49-2.3 1.22-3.06.78-.81 2.11-1.43 3.12-1.44.02 0 .02 0 .02 0zM20.8 17.44c-.59 1.36-.88 1.95-1.65 3.15-1.07 1.64-2.58 3.69-4.45 3.71-1.67.02-2.1-1.09-4.37-1.08-2.27.01-2.75 1.09-4.43 1.07-1.87-.02-3.29-1.86-4.36-3.49C.1 18.55-1.58 13.56 1 9.83c1.19-1.83 3.31-2.99 5.62-3.02 1.76-.03 3.43 1.2 4.37 1.2.92 0 2.98-1.49 5.02-1.27.86.04 3.28.35 4.83 2.63-4.2 2.32-3.52 8.36-.04 8.07z"/></svg>`,
+    embed: (id) => ({
+      src: `https://embed.music.apple.com/es/song/${id}`,
+      extra: `allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" height="175" sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"`
+    })
+  },
+  spotify: {
+    label: "Spotify",
+    icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.52 17.34c-.24.36-.66.48-1.02.24-2.82-1.74-6.36-2.1-10.56-1.14-.42.12-.78-.18-.9-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.48.66.3 1.02zm1.44-3.3c-.3.42-.84.6-1.26.3-3.24-1.98-8.16-2.58-11.94-1.38-.48.12-1.02-.12-1.14-.6-.12-.48.12-1.02.6-1.14 4.38-1.32 9.78-.66 13.5 1.62.36.18.54.78.24 1.2zm.12-3.42C15.3 8.4 8.94 8.16 5.4 9.24c-.6.18-1.2-.18-1.32-.72-.18-.6.18-1.2.72-1.38 4.08-1.2 11.04-.96 15.36 1.62.54.3.72 1.02.36 1.56-.3.48-1.02.66-1.5.36z"/></svg>`,
+    embed: (id) => ({
+      src: `https://open.spotify.com/embed/track/${id}`,
+      extra: `allow="autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture" height="152"`
+    })
+  },
+  youtube: {
+    label: "YouTube",
+    icon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M23.5 6.2a4.8 4.8 0 0 0-.8-2.1 3.2 3.2 0 0 0-2.2-1.2C17.9 2.5 12 2.5 12 2.5s-5.9 0-8.5.4A3.2 3.2 0 0 0 1.3 4a4.8 4.8 0 0 0-.8 2.1A35.1 35.1 0 0 0 0 12c0 1.9.1 3.8.5 5.8.1.8.3 1.5.8 2.1.5.6 1.3 1 2.2 1.1C6.1 21.5 12 21.5 12 21.5s5.9 0 8.5-.4a3.2 3.2 0 0 0 2.2-1.1c.5-.6.7-1.3.8-2.1.4-2 .5-3.9.5-5.8 0-1.9-.1-3.8-.5-5.8zM9.6 15.5V8.5l6.4 3.5-6.4 3.5z"/></svg>`,
+    embed: (id) => ({
+      src: `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`,
+      extra: `allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen height="200"`
+    })
+  }
+};
+
+const el = id => document.getElementById(id);
+const ballNum = el('ballNum'), songTitle = el('songTitle'), songArtist = el('songArtist'), songLinks = el('songLinks');
+const drawnList = el('drawnList'), pendingList = el('pendingList');
+const drawBtn = el('drawBtn'), resetBtn = el('resetBtn'), cbSound = el('cbSound'), cbAutoOpen = el('cbAutoOpen'), cbEmbed = el('cbEmbed'), cbBalanced = el('cbBalanced');
+const cbJovenes = el('cbJovenes'), cbMayores = el('cbMayores'), cbBisagra = el('cbBisagra');
+const statusMsg = el('statusMsg');
+const versionSelect = el('versionSelect');
+const servicePreference = el('servicePreference');
+const countDrawn = el('countDrawn'), countPending = el('countPending'), countTotal = el('countTotal');
+const playerBox = el('playerBox');
+const genBtn = el('genBtn'), qtyInput = el('qty');
+const filterPanelBody = el('filterPanelBody'), filterCountMsg = el('filterCountMsg');
+const applyFilterBtn = el('applyFilterBtn'), downloadFilteredBtn = el('downloadFilteredBtn');
+const filterBox = el('filterBox'), cardBox = el('cardBox');
+const filterLockInfo = el('filterLockInfo');
+
+const validatorOverlay = el('validatorOverlay');
+const validateBtn = el('validateBtn');
+const valClose = el('valClose');
+const valGrid = el('valGrid');
+const valCheck = el('valCheck');
+const valClear = el('valClear');
+const valResult = el('valResult');
+
+let tracks = [];  // normalizados, filtrados por "active" y ya colocados en su posición final (índice 0 = bola 1)
+let fullCatalog = []; // catálogo COMPLETO normalizado, sin filtrar (para el panel de filtro y la descarga)
+let order = [];   // índices restantes por sortear
+let drawn = [];   // {item, index} ya salidos
+let popupTab = null;
+let rotationIndex = 0; // puntero del modo equilibrado, gira entre CATEGORY_ROTATION
+let currentVersionUrl = null;
+
+// ========= localStorage persistence =========
+const LS_KEY = 'bingoState_vdr_v2';
+const LS_FILTER_KEY = 'bingoFilter_vdr_v1';
+const LS_VERSION_KEY = 'bingoVersion_vdr_v1';
+const LS_SERVICE_PREF_KEY = 'bingoServicePref_vdr_v1';
+
+function applyServicePreference(preferred){
+  SERVICE_PRIORITY = [preferred, ...DEFAULT_SERVICE_ORDER.filter(s => s !== preferred)];
+}
+
+function initServicePreference(){
+  let saved = null;
+  try{ saved = localStorage.getItem(LS_SERVICE_PREF_KEY); }catch(e){}
+  const preferred = DEFAULT_SERVICE_ORDER.includes(saved) ? saved : DEFAULT_SERVICE_ORDER[0];
+  servicePreference.value = preferred;
+  applyServicePreference(preferred);
+
+  servicePreference.addEventListener('change', () => {
+    applyServicePreference(servicePreference.value);
+    try{ localStorage.setItem(LS_SERVICE_PREF_KEY, servicePreference.value); }catch(e){}
+    // Refrescar la bola actual, las listas y el panel de filtro para reflejar el nuevo orden
+    const last = drawn.length ? drawn[drawn.length - 1] : null;
+    setCurrent(last ? last.item : null, last ? last.index : null);
+    updateUI();
+    if(fullCatalog.length) renderFilterPanel();
+  });
+}
+
+function trackSig(t){ return t.id ? String(t.id) : (t.title + '\x00' + t.artist); }
+
+function saveFilter(){
+  try{
+    const inactive = fullCatalog.filter(t => t.active === false && !t.fixedBall).map(trackSig);
+    if(inactive.length){
+      localStorage.setItem(LS_FILTER_KEY, JSON.stringify(inactive));
+    } else {
+      localStorage.removeItem(LS_FILTER_KEY);
+    }
+  }catch(e){}
+}
+
+function restoreFilter(catalog){
+  try{
+    const raw = localStorage.getItem(LS_FILTER_KEY);
+    if(!raw) return false;
+    const inactive = JSON.parse(raw);
+    if(!Array.isArray(inactive) || !inactive.length) return false;
+    const inactiveSet = new Set(inactive);
+    let applied = false;
+    catalog.forEach(t => {
+      if(!t.fixedBall && inactiveSet.has(trackSig(t))){ t.active = false; applied = true; }
+    });
+    return applied;
+  }catch(e){ return false; }
+}
+
+function clearFilter(){
+  try{ localStorage.removeItem(LS_FILTER_KEY); }catch(e){}
+}
+function saveState(){
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      version: currentVersionUrl,
+      drawn: drawn.map(d => ({index: d.index})),
+      order: order,
+      rotationIndex: rotationIndex
+    }));
+  }catch(e){}
+}
+function restoreState(trackList){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const saved = JSON.parse(raw);
+    if(!saved || !Array.isArray(saved.drawn) || !Array.isArray(saved.order)) return false;
+    if(saved.version !== currentVersionUrl) return false;
+    const max = trackList.length;
+    const restoredDrawn = saved.drawn.filter(d => Number.isInteger(d.index) && d.index >= 0 && d.index < max);
+    const restoredOrder = saved.order.filter(i => Number.isInteger(i) && i >= 0 && i < max);
+    if(restoredDrawn.length + restoredOrder.length !== max) return false;
+    const allIdx = new Set([...restoredDrawn.map(d => d.index), ...restoredOrder]);
+    if(allIdx.size !== max) return false;
+    drawn = restoredDrawn.map(d => ({item: trackList[d.index], index: d.index}));
+    order = restoredOrder;
+    rotationIndex = Number.isInteger(saved.rotationIndex) ? saved.rotationIndex : 0;
+    return true;
+  }catch(e){ return false; }
+}
+
+// Voz en off al sacar bola (usa síntesis de voz del navegador)
+function getSpanishVoice(){
+  const voices = (window.speechSynthesis && window.speechSynthesis.getVoices)
+    ? window.speechSynthesis.getVoices()
+    : [];
+  return voices.find(v => /^es([_-]|$)/i.test(v.lang)) || voices[0] || null;
+}
+
+function speakDrawnBall(index, item){
+  if(!cbSound.checked) return;
+  if(!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
+  try{
+    const synth = window.speechSynthesis;
+    if(synth.speaking) synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(`Bola ${index + 1}. ${item.title}, de ${item.artist}.`);
+    const voice = getSpanishVoice();
+    if(voice) utterance.voice = voice;
+    utterance.lang = voice?.lang || 'es-ES';
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    synth.speak(utterance);
+  }catch(e){}
+}
+
+// ========= normalización: admite esquema v2 y el formato antiguo de Apple Music =========
+function normalizeOneLegacyTrack(t){
+  const serviceId = (t.serviceId ?? "").toString();
+  const links = {};
+  if((t.service || "applemusic") === "applemusic" && serviceId){
+    links.applemusic = { id: serviceId, url: t.apple_url || t.url || (APPLE_BASE + serviceId) };
+  } else if(t.service === "youtube" && (t.url || serviceId)){
+    links.youtube = { id: serviceId, url: t.url || "" };
+  } else if(t.service === "spotify" && serviceId){
+    links.spotify = { id: serviceId, url: t.url || `https://open.spotify.com/track/${serviceId}` };
+  }
+  return {
+    id: t.id || null,
+    title: t.title || t.track || "—",
+    artist: t.artist || "—",
+    album: t.album || "",
+    isrc: t.isrc || "",
+    fixedBall: Number.isInteger(t.fixedBall) ? t.fixedBall : null,
+    guaranteedBy: Number.isInteger(t.guaranteedBy) ? t.guaranteedBy : null,
+    tags: Array.isArray(t.tags) ? t.tags : [],
+    active: t.active === false ? false : true,
+    links
+  };
+}
+
+function normalizeOneV2Track(t){
+  return {
+    id: t.id || null,
+    title: t.title || "—",
+    artist: t.artist || "—",
+    album: t.album || "",
+    isrc: t.isrc || "",
+    fixedBall: Number.isInteger(t.fixedBall) ? t.fixedBall : null,
+    guaranteedBy: Number.isInteger(t.guaranteedBy) ? t.guaranteedBy : null,
+    tags: Array.isArray(t.tags) ? t.tags : [],
+    active: t.active === false ? false : true,
+    links: t.links || {}
+  };
+}
+
+// Devuelve el catálogo COMPLETO normalizado (sin filtrar por "active" ni colocar fixedBall todavía).
+// El filtrado y la colocación de bolas fijas se hacen aparte, en computeFilteredArranged().
+function normalizeToFullCatalog(json){
+  if(json && json.version >= 2 && Array.isArray(json.tracks)){
+    return json.tracks.map(normalizeOneV2Track);
+  } else if(Array.isArray(json)){
+    const raw = (json.length && json[0] && Array.isArray(json[0].tracks)) ? json[0].tracks : json;
+    return raw.map(normalizeOneLegacyTrack);
+  } else if(json && Array.isArray(json.tracks)){
+    return json.tracks.map(normalizeOneLegacyTrack);
+  } else {
+    throw new Error("Estructura JSON no reconocida.");
+  }
+}
+
+// Filtra por "active", coloca las bolas fijas dentro de ESE subconjunto (renumerando de 1 a N
+// sin huecos) y valida que quepa cualquier fixedBall solicitado por una canción activa.
+// Devuelve {arranged, error}. Si hay error, no se debe aplicar el filtro (llamador decide el fallback).
+function computeFilteredArranged(fullCatalog){
+  const activeList = fullCatalog.filter(t => t.active !== false);
+  const maxFixedRequired = Math.max(0, ...fullCatalog
+    .filter(t => t.active !== false && t.fixedBall)
+    .map(t => t.fixedBall));
+  if(maxFixedRequired > activeList.length){
+    return {
+      arranged: null,
+      error: `No se puede aplicar el filtro: hay una canción fija en la bola ${maxFixedRequired} pero solo quedan ${activeList.length} canciones activas. Activa al menos ${maxFixedRequired} canciones para poder jugar.`
+    };
+  }
+  return { arranged: arrangeWithFixedBalls(activeList), error: null };
+}
+
+// Coloca cada pista con "fixedBall" exactamente en esa posición (1-based) del array final,
+// y reparte el resto de pistas, en su orden original, en los huecos libres.
+function arrangeWithFixedBalls(normTracks){
+  const total = normTracks.length;
+  const fixed = normTracks.filter(t => t.fixedBall && t.fixedBall >= 1 && t.fixedBall <= total);
+  const normal = normTracks.filter(t => !(t.fixedBall && t.fixedBall >= 1 && t.fixedBall <= total));
+
+  const result = new Array(total).fill(null);
+  fixed.forEach(t => { result[t.fixedBall - 1] = t; });
+
+  let ni = 0;
+  for(let i = 0; i < total; i++){
+    if(result[i] === null){
+      result[i] = normal[ni++];
+    }
+  }
+  return result;
+}
+
+// ========= parseo de URLs para el editor de canciones =========
+function parseAppleMusicUrl(url){
+  if(!url) return null;
+  let m = url.match(/[?&]i=(\d+)/);
+  if(m) return m[1];
+  m = url.match(/\/song\/[^\/]*\/(\d+)/);
+  if(m) return m[1];
+  m = url.match(/(\d{5,})(?:[?#]|$)/);
+  if(m) return m[1];
+  return null;
+}
+function parseSpotifyUrl(url){
+  if(!url) return null;
+  const m = url.match(/open\.spotify\.com\/(?:intl-\w+\/)?track\/([A-Za-z0-9]+)/);
+  return m ? m[1] : null;
+}
+function parseYoutubeUrl(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function preferredService(linksObj){
+  for(const s of SERVICE_PRIORITY){
+    if(linksObj && linksObj[s] && (linksObj[s].url || linksObj[s].id)) return s;
+  }
+  return null;
+}
+
+function hrefFor(item, service){
+  const l = item.links && item.links[service];
+  if(!l) return "";
+  if(l.url) return l.url;
+  if(service === 'applemusic' && l.id) return APPLE_BASE + l.id;
+  if(service === 'spotify' && l.id) return `https://open.spotify.com/track/${l.id}`;
+  return "";
+}
+
+function resetState(newTracks){
+  tracks = newTracks;
+  order = Array.from({length: tracks.length}, (_,i)=>i);
+  drawn = [];
+  rotationIndex = 0;
+  updateUI();
+  setCurrent();
+}
+
+function setCurrent(item=null, index=null){
+  if(!item){
+    ballNum.textContent = "–";
+    songTitle.textContent = "—";
+    songArtist.textContent = "—";
+    songLinks.innerHTML = "";
+    playerBox.innerHTML = "";
+    playerBox.classList.remove('visible');
+    return;
+  }
+  ballNum.classList.remove('pop');
+  void ballNum.offsetWidth;
+  ballNum.classList.add('pop');
+
+  ballNum.textContent = index + 1;
+  songTitle.textContent = item.title || "—";
+  songArtist.textContent = item.artist || "—";
+
+  const linkHtml = SERVICE_PRIORITY
+    .filter(s => item.links && item.links[s])
+    .map(s => renderLink(s, hrefFor(item, s)))
+    .join("");
+  songLinks.innerHTML = linkHtml;
+
+  updatePlayer(item);
+}
+
+function renderLink(service, href){
+  if(!href) return "";
+  const meta = SERVICE_META[service];
+  return `<a class="linkIcon open" data-service="${service}" href="${href}" target="_blank" rel="noopener">
+    ${meta.icon}
+    <span>Abrir en ${meta.label}</span>
+  </a>`;
+}
+
+function updatePlayer(item=null){
+  if(!cbEmbed || !cbEmbed.checked || !item){
+    playerBox.innerHTML = "";
+    playerBox.classList.remove('visible');
+    return;
+  }
+  // Si "Abrir enlace al sacar bola" está activo, esa pestaña ya reproduce con autoplay —
+  // no mostramos también el reproductor embebido, para evitar que suene dos veces a la vez.
+  if(cbAutoOpen && cbAutoOpen.checked){
+    playerBox.innerHTML = `<p class="msg" style="margin:0">▶️ Reproduciéndose en la pestaña lateral (para evitar sonido duplicado, el reproductor embebido se desactiva mientras "Abrir enlace al sacar bola" esté activo).</p>`;
+    playerBox.classList.add('visible');
+    return;
+  }
+  const service = preferredService(item.links);
+  const l = service && item.links[service];
+  const safeId = l && /^[\w-]+$/.test(l.id || '') ? l.id : '';
+
+  if(service && safeId && SERVICE_META[service]){
+    const {src, extra} = SERVICE_META[service].embed(safeId);
+    playerBox.innerHTML = `<iframe src="${src}" ${extra}></iframe>`;
+    playerBox.classList.add('visible');
+  } else {
+    playerBox.innerHTML = "";
+    playerBox.classList.remove('visible');
+  }
+}
+
+function updateUI(){
+  countTotal.textContent = tracks.length;
+  countDrawn.textContent = drawn.length;
+  countPending.textContent = order.length;
+
+  const reversedDrawn = drawn.slice().reverse();
+  drawnList.innerHTML = reversedDrawn.map((d, i) => pill(d.item, d.index, true, i === 0)).join("");
+  pendingList.innerHTML = order.map(i => pill(tracks[i], i, false)).join("");
+
+  document.querySelectorAll('.pill a.open').forEach(a=>{
+    a.addEventListener('click', (ev)=>{
+      ev.preventDefault();
+      openInSideTab(a.href);
+    }, {passive:false});
+  });
+  updateSectionLock();
+}
+
+function pill(item, index, used, current=false){
+  const n = index + 1;
+  const isFixed = !!item.fixedBall;
+  const serviceLinksHtml = SERVICE_PRIORITY
+    .filter(s => item.links && item.links[s])
+    .map(s => {
+      const href = hrefFor(item, s);
+      const meta = SERVICE_META[s];
+      return href ? `<a class="open" href="${href}" title="Reproducir en ${meta.label}">${meta.icon}</a>` : '';
+    }).filter(Boolean).join('');
+  return `<div class="pill ${used?'used':''} ${current?'current':''} ${isFixed?'fixed':''}">
+    <span><strong>#${n}</strong> · ${escapeHtml(item.title)} <small>· ${escapeHtml(item.artist||'')}</small></span>
+    ${serviceLinksHtml ? `<div class="pill-links">${serviceLinksHtml}</div>` : ''}
+  </div>`;
+}
+
+function escapeHtml(s){return (s??'').toString().replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]))}
+
+// Si alguna canción pendiente tiene "guaranteedBy" y estamos ya en esa bola límite,
+// se fuerza su salida (posición dentro de "order", no el número de bola).
+function findGuaranteedForce(){
+  const nextDrawNumber = drawn.length + 1;
+  for(let i = 0; i < order.length; i++){
+    const t = tracks[order[i]];
+    if(t.guaranteedBy && nextDrawNumber >= t.guaranteedBy) return i;
+  }
+  return -1;
+}
+
+// Modo filtro fijo: elige al azar solo entre canciones de una categoría concreta.
+// Si se agotan las canciones de esa categoría, desmarca el check y cae en azar libre.
+function pickIndexFiltered(tag, cb){
+  const candidates = [];
+  for(let i = 0; i < order.length; i++){
+    if((tracks[order[i]].tags || []).includes(tag)) candidates.push(i);
+  }
+  if(candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
+  cb.checked = false;
+  status(`Sin canciones de "${tag}" pendientes — sorteo libre.`);
+  return Math.floor(Math.random() * order.length);
+}
+
+// Modo equilibrado: rota entre categorías de público y elige al azar dentro de la categoría actual.
+// Si una categoría no tiene candidatos pendientes, prueba con la siguiente en la rotación.
+function pickIndexBalanced(){
+  for(let attempts = 0; attempts < CATEGORY_ROTATION.length; attempts++){
+    const cat = CATEGORY_ROTATION[rotationIndex % CATEGORY_ROTATION.length];
+    rotationIndex++;
+    const candidates = [];
+    for(let i = 0; i < order.length; i++){
+      if((tracks[order[i]].tags || []).includes(cat)) candidates.push(i);
+    }
+    if(candidates.length){
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
+  }
+  return Math.floor(Math.random() * order.length);
+}
+
+function drawOne(){
+  if(order.length===0){status("No quedan bolas. ¡Bingo completo!"); return;}
+  let posInOrder = findGuaranteedForce();
+  if(posInOrder === -1){
+    if(cbBalanced.checked)       posInOrder = pickIndexBalanced();
+    else if(cbJovenes.checked)   posInOrder = pickIndexFiltered('jovenes', cbJovenes);
+    else if(cbMayores.checked)   posInOrder = pickIndexFiltered('mayores', cbMayores);
+    else if(cbBisagra.checked)   posInOrder = pickIndexFiltered('bisagra', cbBisagra);
+    else                         posInOrder = Math.floor(Math.random()*order.length);
+  }
+  const idx = order.splice(posInOrder,1)[0];
+  const item = tracks[idx];
+  drawn.push({item, index: idx});
+  setCurrent(item, idx);
+  updateUI();
+  speakDrawnBall(idx, item);
+  status("");
+  saveState();
+  if(cbAutoOpen.checked){
+    const service = preferredService(item.links);
+    const href = service ? hrefFor(item, service) : "";
+    if(href) openInSideTab(href, true);
+  }
+}
+
+function resetAll(){
+  order = Array.from({length: tracks.length}, (_,i)=>i);
+  drawn = [];
+  rotationIndex = 0;
+  cbAutoOpen.checked = false;
+  cbBalanced.checked = true;
+  cbJovenes.checked = false;
+  cbMayores.checked = false;
+  cbBisagra.checked = false;
+  setCurrent();
+  updateUI();
+  saveState();
+  clearFilter();
+  status("Reiniciado.");
+}
+
+function status(msg){ statusMsg.textContent = msg; }
+
+function openInSideTab(href, tryAutoplay=false){
+  try{
+    if(!popupTab || popupTab.closed){
+      popupTab = window.open(href, 'bingoPlayer');
+    }else{
+      popupTab.location.href = href;
+    }
+    if(tryAutoplay){
+      if(/youtube\.com|youtu\.be/.test(href) && !/[?&]autoplay=1/.test(href)){
+        const sep = href.includes('?') ? '&' : '?';
+        popupTab.location.href = href + sep + 'autoplay=1';
+      }
+    }
+  }catch(e){
+    console.warn('Bloqueado por el navegador o error al abrir la pestaña:', e);
+    window.open(href, '_blank', 'noopener');
+  }
+}
+
+// ========= PANEL DE FILTRO DE CANCIONES =========
+const CATEGORY_LABELS = {
+  jovenes: "Jóvenes",
+  mayores: "Mayores",
+  bisagra: "Bisagra (todas las edades)",
+  "todas-edades": "Comodines (todas las edades)",
+  otros: "Otras / sin categoría"
+};
+
+function primaryCategoryOf(t){
+  for(const cat of CATEGORY_ROTATION){
+    if((t.tags||[]).includes(cat)) return cat;
+  }
+  return "otros";
+}
+
+function renderFilterPanel(){
+  if(!fullCatalog.length) return;
+  const groups = {};
+  fullCatalog.forEach((t, idx) => {
+    const cat = primaryCategoryOf(t);
+    (groups[cat] = groups[cat] || []).push({t, idx});
+  });
+
+  const order = [...CATEGORY_ROTATION, "otros"];
+  let html = "";
+  order.forEach(cat => {
+    if(!groups[cat] || !groups[cat].length) return;
+    html += `<div class="filterGroup">
+      <h4>${CATEGORY_LABELS[cat] || cat} <small>(${groups[cat].length})</small></h4>
+      <div class="filterGrid">`;
+    groups[cat].forEach(({t, idx}) => {
+      const locked = !!t.fixedBall; // el pasodoble no se puede desactivar desde aquí
+      const filterServiceLinksHtml = SERVICE_PRIORITY
+        .filter(s => t.links && t.links[s])
+        .map(s => {
+          const href = hrefFor(t, s);
+          const meta = SERVICE_META[s];
+          return href ? `<a class="open" href="${href}" title="Reproducir en ${meta.label}">${meta.icon}</a>` : '';
+        }).filter(Boolean).join('');
+      html += `<div class="filterItem ${locked?'locked':''}">
+        <label title="${locked ? 'Esta canción está fijada a una bola concreta y no se puede desactivar aquí.' : ''}">
+          <input type="checkbox" data-idx="${idx}" ${t.active!==false?'checked':''} ${locked?'disabled':''}>
+          <span>${escapeHtml(t.title)} <small>· ${escapeHtml(t.artist||'')}</small></span>
+        </label>
+        ${filterServiceLinksHtml ? `<div class="pill-links">${filterServiceLinksHtml}</div>` : ''}
+        <button type="button" class="btn edit-song-btn" data-idx="${idx}" title="Editar canción" style="padding:4px 8px;font-size:12px">✏️</button>
+        ${locked ? '' : `<button type="button" class="btn del-song-btn" data-idx="${idx}" title="Eliminar canción" style="padding:4px 8px;font-size:12px">🗑️</button>`}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  filterPanelBody.innerHTML = html;
+  updateFilterCount();
+
+  filterPanelBody.querySelectorAll('a.open').forEach(a => {
+    a.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      openInSideTab(a.href);
+    }, {passive: false});
+  });
+
+  filterPanelBody.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const idx = parseInt(cb.dataset.idx, 10);
+      fullCatalog[idx].active = cb.checked;
+      updateFilterCount();
+    });
+  });
+
+  filterPanelBody.querySelectorAll('.edit-song-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      openSongEditor(idx);
+    });
+  });
+  filterPanelBody.querySelectorAll('.del-song-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      deleteSong(idx);
+    });
+  });
+}
+
+function updateFilterCount(){
+  const activeCount = fullCatalog.filter(t => t.active !== false).length;
+  filterCountMsg.textContent = `${activeCount} de ${fullCatalog.length} canciones activas.`;
+}
+
+function expectedActiveCount(){
+  // Regla de juego: la edición debe validarse siempre sobre 90 canciones.
+  return 90;
+}
+
+function applyFilter(){
+  const activeCount = fullCatalog.filter(t => t.active !== false).length;
+  const expectedCount = expectedActiveCount();
+  const {arranged, error} = computeFilteredArranged(fullCatalog);
+  if(error){
+    alert(error);
+    return;
+  }
+  if(activeCount !== expectedCount){
+    const diff = activeCount < expectedCount
+      ? `Faltan ${expectedCount - activeCount} para llegar a las ${expectedCount} habituales.`
+      : `Son ${activeCount - expectedCount} más de las ${expectedCount} habituales.`;
+    if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Aplicar el filtro de todos modos?`)) return;
+  }
+  const applyIt = () => {
+    resetState(arranged);
+    saveState();
+    saveFilter();
+    status(`Filtro aplicado: ${arranged.length} de ${fullCatalog.length} canciones en juego.`);
+  };
+  if(drawn.length > 0){
+    if(confirm(`Ya hay ${drawn.length} bola(s) sacada(s) en esta sesión. Aplicar el filtro reinicia la partida y renumera las bolas — cualquier cartón ya impreso con la numeración anterior dejará de coincidir. ¿Continuar?`)){
+      applyIt();
+    }
+  } else {
+    applyIt();
+  }
+}
+
+function downloadFilteredJson(){
+  const activeCount = fullCatalog.filter(t => t.active !== false).length;
+  const expectedCount = expectedActiveCount();
+  if(activeCount !== expectedCount){
+    const diff = activeCount < expectedCount
+      ? `Faltan ${expectedCount - activeCount} para llegar a las ${expectedCount} habituales.`
+      : `Son ${activeCount - expectedCount} más de las ${expectedCount} habituales.`;
+    if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Descargar el JSON filtrado de todos modos?`)) return;
+  }
+  const payload = {
+    version: (currentVersionUrl?.match(/_v(\d+)\.json$/)?.[1]) ? parseInt(currentVersionUrl.match(/_v(\d+)\.json$/)[1], 10) : 2,
+    lists: [{ id: "applemusic-vdr", service: "applemusic", name: "Bingo Musical VDR (filtrado)", url: null }],
+    tracks: fullCatalog.map(t => ({
+      id: t.id,
+      title: t.title,
+      artist: t.artist,
+      album: t.album,
+      isrc: t.isrc,
+      genre: t.genre,
+      decade: t.decade,
+      tags: t.tags,
+      active: t.active !== false,
+      ...(t.fixedBall ? {fixedBall: t.fixedBall} : {}),
+      ...(t.guaranteedBy ? {guaranteedBy: t.guaranteedBy} : {}),
+      ...(t.note ? {note: t.note} : {}),
+      links: t.links
+    }))
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bingo_musical_vdr_filtrado.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ========= EDITOR DE CANCIONES =========
+const songEditorOverlay = el('songEditorOverlay');
+const songEditorTitle = el('songEditorTitle');
+const songEditorClose = el('songEditorClose');
+const songEditorCancel = el('songEditorCancel');
+const songEditorSave = el('songEditorSave');
+const songEditorDelete = el('songEditorDelete');
+const songEditorMsg = el('songEditorMsg');
+const addSongBtn = el('addSongBtn');
+const seTitle = el('seTitle'), seArtist = el('seArtist'), seAlbum = el('seAlbum');
+const seGenre = el('seGenre'), seDecade = el('seDecade');
+const seTagJovenes = el('seTagJovenes'), seTagMayores = el('seTagMayores'), seTagBisagra = el('seTagBisagra'), seTagTodas = el('seTagTodas');
+const seAppleUrl = el('seAppleUrl'), seYoutubeUrl = el('seYoutubeUrl'), seSpotifyUrl = el('seSpotifyUrl');
+
+let editingIdx = null; // null = añadiendo canción nueva; número = editando fullCatalog[editingIdx]
+
+function nextSongId(){
+  return 't' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+function openSongEditor(idx){
+  editingIdx = (typeof idx === 'number') ? idx : null;
+  songEditorMsg.textContent = '';
+  const t = editingIdx !== null ? fullCatalog[editingIdx] : null;
+
+  songEditorTitle.textContent = t ? 'Editar canción' : 'Añadir canción';
+  seTitle.value = t ? (t.title || '') : '';
+  seArtist.value = t ? (t.artist || '') : '';
+  seAlbum.value = t ? (t.album || '') : '';
+  seGenre.value = t ? (t.genre || '') : '';
+  seDecade.value = t ? (t.decade || '') : '';
+  const tags = t ? (t.tags || []) : [];
+  seTagJovenes.checked = tags.includes('jovenes');
+  seTagMayores.checked = tags.includes('mayores');
+  seTagBisagra.checked = tags.includes('bisagra');
+  seTagTodas.checked = tags.includes('todas-edades');
+  seAppleUrl.value = t?.links?.applemusic?.url || '';
+  seYoutubeUrl.value = t?.links?.youtube?.url || '';
+  seSpotifyUrl.value = t?.links?.spotify?.url || '';
+
+  songEditorDelete.style.display = (t && !t.fixedBall) ? 'inline-block' : 'none';
+
+  songEditorOverlay.style.display = 'flex';
+  songEditorOverlay.setAttribute('aria-hidden', 'false');
+  seTitle.focus();
+}
+
+function closeSongEditor(){
+  songEditorOverlay.style.display = 'none';
+  songEditorOverlay.setAttribute('aria-hidden', 'true');
+  editingIdx = null;
+}
+
+function saveSongEditor(){
+  const title = seTitle.value.trim();
+  const artist = seArtist.value.trim();
+  if(!title || !artist){
+    songEditorMsg.textContent = 'El título y el artista son obligatorios.';
+    return;
+  }
+
+  const links = {};
+  const appleUrl = seAppleUrl.value.trim();
+  const youtubeUrl = seYoutubeUrl.value.trim();
+  const spotifyUrl = seSpotifyUrl.value.trim();
+
+  if(appleUrl){
+    const id = parseAppleMusicUrl(appleUrl);
+    if(!id){ songEditorMsg.textContent = 'No se reconoce la URL de Apple Music.'; return; }
+    links.applemusic = { id, url: appleUrl };
+  }
+  if(youtubeUrl){
+    const id = parseYoutubeUrl(youtubeUrl);
+    if(!id){ songEditorMsg.textContent = 'No se reconoce la URL de YouTube.'; return; }
+    links.youtube = { id, url: youtubeUrl };
+  }
+  if(spotifyUrl){
+    const id = parseSpotifyUrl(spotifyUrl);
+    if(!id){ songEditorMsg.textContent = 'No se reconoce la URL de Spotify.'; return; }
+    links.spotify = { id, url: spotifyUrl };
+  }
+
+  const tags = [];
+  if(seTagJovenes.checked) tags.push('jovenes');
+  if(seTagMayores.checked) tags.push('mayores');
+  if(seTagBisagra.checked) tags.push('bisagra');
+  if(seTagTodas.checked) tags.push('todas-edades');
+
+  if(editingIdx !== null){
+    const existing = fullCatalog[editingIdx];
+    existing.title = title;
+    existing.artist = artist;
+    existing.album = seAlbum.value.trim();
+    existing.genre = seGenre.value.trim() || null;
+    existing.decade = seDecade.value.trim() || null;
+    existing.tags = tags;
+    existing.links = links;
+  } else {
+    fullCatalog.push({
+      id: nextSongId(),
+      title, artist,
+      album: seAlbum.value.trim(),
+      genre: seGenre.value.trim() || null,
+      decade: seDecade.value.trim() || null,
+      tags,
+      active: true,
+      links
+    });
+  }
+
+  closeSongEditor();
+  renderFilterPanel();
+  status(editingIdx !== null ? 'Canción actualizada.' : 'Canción añadida al catálogo.');
+}
+
+function deleteSong(idx){
+  const t = fullCatalog[idx];
+  if(!t || t.fixedBall) return;
+  if(!confirm(`¿Eliminar "${t.title}" — ${t.artist} del catálogo? Esta acción no se puede deshacer (pero puedes descargar el JSON antes si quieres conservarla).`)) return;
+  fullCatalog.splice(idx, 1);
+  renderFilterPanel();
+  status('Canción eliminada del catálogo.');
+}
+
+addSongBtn.addEventListener('click', () => openSongEditor(null));
+songEditorClose.addEventListener('click', closeSongEditor);
+songEditorCancel.addEventListener('click', closeSongEditor);
+songEditorSave.addEventListener('click', saveSongEditor);
+songEditorDelete.addEventListener('click', () => {
+  if(editingIdx === null) return;
+  const idx = editingIdx;
+  closeSongEditor();
+  deleteSong(idx);
+});
+songEditorOverlay.addEventListener('click', (e) => { if(e.target === songEditorOverlay) closeSongEditor(); });
+
+// ========= carga de la lista =========
+function applyLoadedJson(json, label, tryRestore){
+  fullCatalog = normalizeToFullCatalog(json);
+  if(tryRestore){
+    restoreFilter(fullCatalog);
+  } else {
+    clearFilter();
+  }
+  const {arranged, error} = computeFilteredArranged(fullCatalog);
+  let norm;
+  if(error){
+    // Si el filtro guardado en el JSON es inválido (menos activas de las que exige una bola fija),
+    // no lo aplicamos: jugamos con el catálogo completo y avisamos.
+    norm = arrangeWithFixedBalls(fullCatalog);
+    status(error + " Se ha cargado el catálogo completo, ignorando el filtro.");
+  } else {
+    norm = arranged;
+  }
+  renderFilterPanel();
+
+  if(tryRestore && restoreState(norm)){
+    tracks = norm;
+    updateUI();
+    if(drawn.length > 0){
+      const last = drawn[drawn.length - 1];
+      setCurrent(last.item, last.index);
+    } else {
+      setCurrent();
+    }
+    if(!error) status(`Cargadas ${norm.length} pistas activas de ${fullCatalog.length} en catálogo (${label}). Sesión restaurada (${drawn.length} bolas ya salidas).`);
+  } else {
+    resetState(norm);
+    saveState();
+    if(!error) status(`Cargadas ${norm.length} pistas activas de ${fullCatalog.length} en catálogo (${label}).`);
+  }
+}
+
+// ========= selección y carga de versión =========
+async function findAvailableVersions(maxV = 20){
+  const results = await Promise.all(
+    Array.from({length: maxV}, (_, i) => {
+      const v = i + 1;
+      return fetch(`./${BASE_LIST_NAME}_v${v}.json`, {method: 'HEAD', cache: 'no-store'})
+        .then(r => r.ok ? v : null)
+        .catch(() => null);
+    })
+  );
+  return results.filter(v => v !== null);
+}
+
+function buildVersionSelect(versions, selectedV){
+  versionSelect.innerHTML = versions.map(v =>
+    `<option value="${v}"${v === selectedV ? ' selected' : ''}>Lista v${v}</option>`
+  ).join('');
+}
+
+async function loadVersionUrl(url, tryRestore){
+  try{
+    const res = await fetch(url, {cache: "no-store"});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    applyLoadedJson(json, url.replace('./', ''), tryRestore);
+  }catch(e){
+    status(`No se pudo cargar ${url}: ${e.message}. Pega un JSON manualmente abajo.`);
+  }
+}
+
+async function initVersionSelector(){
+  status('Buscando listas disponibles…');
+  const versions = await findAvailableVersions();
+  if(!versions.length){
+    status('No se encontró ningún archivo de lista. Pega un JSON manualmente.');
+    return;
+  }
+  const savedV = parseInt(localStorage.getItem(LS_VERSION_KEY) || '', 10);
+  const selectedV = (savedV && versions.includes(savedV)) ? savedV : Math.max(...versions);
+  buildVersionSelect(versions, selectedV);
+  currentVersionUrl = `./${BASE_LIST_NAME}_v${selectedV}.json`;
+
+  versionSelect.addEventListener('change', async function(){
+    const newV = parseInt(this.value, 10);
+    const newUrl = `./${BASE_LIST_NAME}_v${newV}.json`;
+    if(drawn.length > 0){
+      if(!confirm(`Cambiar de versión reiniciará la partida actual (${drawn.length} bola${drawn.length > 1 ? 's' : ''} ya sacada${drawn.length > 1 ? 's' : ''}). ¿Continuar?`)){
+        this.value = String(parseInt(currentVersionUrl.match(/_v(\d+)\.json$/)?.[1] || '1', 10));
+        return;
+      }
+    }
+    currentVersionUrl = newUrl;
+    localStorage.setItem(LS_VERSION_KEY, String(newV));
+    await loadVersionUrl(newUrl, false);
+  });
+
+  await loadVersionUrl(currentVersionUrl, true);
+}
+
+function updateSectionLock(){
+  const locked = drawn.length > 0;
+  [filterBox, cardBox].forEach(box => {
+    box.classList.toggle('game-locked', locked);
+    if(locked && box.open) box.open = false;
+  });
+  versionSelect.disabled = locked;
+  if(locked && tracks.length < fullCatalog.length){
+    filterLockInfo.textContent = ` ${tracks.length}/${fullCatalog.length} bolas`;
+  } else {
+    filterLockInfo.textContent = '';
+  }
+}
+
+// ========= eventos =========
+drawBtn.addEventListener('click', drawOne);
+resetBtn.addEventListener('click', () => {
+  if(drawn.length > 0 && order.length > 0 &&
+     !confirm(`Hay ${drawn.length} bola${drawn.length > 1 ? 's' : ''} sacada${drawn.length > 1 ? 's' : ''} y la partida no ha terminado. ¿Reiniciar?`)) return;
+  resetAll();
+});
+
+// Exclusividad mutua: categoría fija <-> modo equilibrado
+[cbJovenes, cbMayores, cbBisagra].forEach(cb => {
+  cb.addEventListener('change', () => {
+    if(cb.checked){
+      cbBalanced.checked = false;
+      [cbJovenes, cbMayores, cbBisagra].forEach(o => { if(o !== cb) o.checked = false; });
+    }
+  });
+});
+cbBalanced.addEventListener('change', () => {
+  if(cbBalanced.checked){
+    cbJovenes.checked = false;
+    cbMayores.checked = false;
+    cbBisagra.checked = false;
+  }
+});
+
+cbEmbed.addEventListener('change', ()=>{
+  const last = drawn.length ? drawn[drawn.length-1] : null;
+  updatePlayer(last ? last.item : null);
+});
+cbAutoOpen.addEventListener('change', ()=>{
+  const last = drawn.length ? drawn[drawn.length-1] : null;
+  updatePlayer(last ? last.item : null);
+});
+applyFilterBtn.addEventListener('click', applyFilter);
+downloadFilteredBtn.addEventListener('click', downloadFilteredJson);
+
+let _lastDraw = 0;
+document.addEventListener('keydown', (e)=>{
+  const tag = e.target.tagName;
+  if(e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'BUTTON' && tag !== 'SELECT'){
+    e.preventDefault();
+    if(e.repeat) return; // ignorar repetición por tecla mantenida
+    const now = Date.now();
+    if(now - _lastDraw < 600) return; // cooldown 600ms contra pulsado accidental doble
+    _lastDraw = now;
+    drawOne();
+  }
+});
+
+// ========= Generar cartones =========
+genBtn.addEventListener('click', ()=>{
+  try{
+    if(!tracks.length){
+      alert('Primero carga una lista de canciones.');
+      return;
+    }
+    let qty = qtyInput.valueAsNumber;
+    if(!Number.isFinite(qty)) qty = 40;
+    qty = Math.round(qty);
+    qty = Math.max(2, Math.min(100, qty));
+    if (qty % 2 !== 0) qty += 1;
+    generateCardsPDF(tracks, qty);
+  }catch(e){
+    console.error(e);
+    alert('No se pudo generar el PDF: ' + e.message);
+  }
+});
+
+// ========= arranque =========
+setCurrent();
+initServicePreference();
+initVersionSelector();
+
+// ========= PDF helpers =========
+async function ensureJsPDF(){
+  if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+  await new Promise(r => setTimeout(r, 50));
+  if (window.jspdf && window.jspdf.jsPDF) return window.jspdf.jsPDF;
+  throw new Error('jsPDF no está disponible. Asegúrate de incluir el script CDN antes.');
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function labelForBall(trackList, ballNumber){
+  const t = trackList[ballNumber - 1] || {};
+  const artist = (t.artist || "—").toString();
+  const title = (t.title || "—").toString();
+  return `${artist} – ${title}`;
+}
+
+function drawCard(doc, trackList, cardNumber, numbers, x, y, opts={}){
+  const {
+    cardWidth=180, cardHeight=130,
+    headerH=12,
+    gridPadding=8,
+    bigNumberSize=22,
+    textSize=8,
+    lineGap=2,
+    radius=2,
+    versionLabel=''
+  } = opts;
+
+  doc.setDrawColor(20);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(x, y, cardWidth, cardHeight, radius, radius);
+
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(12);
+  const title = `Bingo Musical Valdemoro del Rey — Cartón #${String(cardNumber).padStart(2,'0')}`;
+  doc.text(title, x + cardWidth/2, y + 7, {align:"center", baseline:"middle"});
+
+  const gridX = x + gridPadding;
+  const gridY = y + headerH + gridPadding;
+  const gridW = cardWidth - gridPadding*2;
+  const gridH = cardHeight - headerH - gridPadding*2;
+
+  doc.setLineWidth(0.5);
+  doc.roundedRect(gridX, gridY, gridW, gridH, 1.5, 1.5);
+
+  const cols = 4, rows = 2;
+  const cellW = gridW / cols;
+  const cellH = gridH / rows;
+
+  for(let c=1;c<cols;c++){
+    const cx = gridX + c*cellW;
+    doc.line(cx, gridY, cx, gridY+gridH);
+  }
+  for(let r=1;r<rows;r++){
+    const cy = gridY + r*cellH;
+    doc.line(gridX, cy, gridX+gridW, cy);
+  }
+
+  doc.setFont("helvetica","bold");
+  doc.setTextColor(0);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const i = r*cols + c;
+      const n = numbers[i];
+      const cx = gridX + c*cellW;
+      const cy = gridY + r*cellH;
+
+      doc.setFontSize(bigNumberSize);
+      doc.text(String(n), cx + cellW/2, cy + 9, {align:"center"});
+
+      const label = labelForBall(trackList, n);
+      doc.setFont("helvetica","normal");
+      doc.setFontSize(textSize);
+      const textTop = cy + 9 + 6;
+      const textLeft = cx + 2.5;
+      const textWidth = cellW - 5;
+      const wrapped = doc.splitTextToSize(label, textWidth);
+
+      let lines = wrapped.slice(0,3);
+      if(wrapped.length > 3){
+        const last = lines[2];
+        const ell = '…';
+        let cut = last;
+        while(doc.getTextWidth(cut + ell) > textWidth && cut.length>0){
+          cut = cut.slice(0, -1);
+        }
+        lines[2] = cut + ell;
+      }
+      let ty = textTop;
+      lines.forEach(line=>{
+        doc.text(line, textLeft, ty);
+        ty += textSize*0.3527 + lineGap;
+      });
+      doc.setFont("helvetica","bold");
+    }
+  }
+  if(versionLabel){
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(6);
+    doc.setTextColor(160, 160, 160);
+    doc.text(versionLabel, x + cardWidth - 3, y + cardHeight - 2, {align:'right'});
+    doc.setTextColor(0);
+  }
+}
+
+// Genera los cartones en PDF. Las bolas con "fixedBall" (p. ej. la 24, el pasodoble de San Juan)
+// salen SIEMPRE en todos los cartones; el resto de casillas se sortea entre las demás canciones.
+async function generateCardsPDF(trackList, qty){
+  const jsPDF = await ensureJsPDF();
+  const doc = new jsPDF({unit:'mm', format:'a4', orientation:'portrait'});
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+
+  const marginX = (pageW - 180) / 2;
+  const topY = 12;
+  const bottomY = pageH - 12 - 130;
+
+  const totalBalls = trackList.length;
+  const fixedNumbers = trackList
+    .map((t, i) => ({n: i + 1, fixed: !!t.fixedBall}))
+    .filter(x => x.fixed)
+    .map(x => x.n);
+
+  const cellsPerCard = 8;
+  if(totalBalls < cellsPerCard){
+    alert(`La lista debe tener al menos ${cellsPerCard} canciones.`);
+    throw new Error(`La lista debe tener al menos ${cellsPerCard} canciones.`);
+  }
+  if(fixedNumbers.length > cellsPerCard){
+    alert(`Hay más bolas fijas (${fixedNumbers.length}) que casillas por cartón (${cellsPerCard}).`);
+    throw new Error('Demasiadas bolas fijas para el tamaño del cartón.');
+  }
+
+  const fixedSet = new Set(fixedNumbers);
+  const pool = [];
+  for(let n=1;n<=totalBalls;n++){ if(!fixedSet.has(n)) pool.push(n); }
+
+  const randomCount = cellsPerCard - fixedNumbers.length;
+
+  const vMatch = currentVersionUrl?.match(/_v(\d+)\.json$/);
+  const isFiltered = trackList.length < fullCatalog.length;
+  const countLabel = isFiltered
+    ? `${trackList.length}/${fullCatalog.length} bolas (filtrada)`
+    : `${trackList.length} bolas`;
+  const versionLabel = vMatch ? `Lista v${vMatch[1]} · ${countLabel}` : countLabel;
+
+  let cardNo = 1;
+  for(let i=0;i<qty;i++){
+    const poolCopy = pool.slice();
+    shuffle(poolCopy);
+    const pick = poolCopy.slice(0, randomCount).concat(fixedNumbers);
+    shuffle(pick);
+
+    const isTop = (i%2===0);
+    const posY = isTop ? topY : bottomY;
+    drawCard(doc, trackList, cardNo, pick, marginX, posY, {versionLabel});
+
+    if(!isTop && i<qty-1){
+      doc.addPage();
+    }
+    cardNo++;
+  }
+  doc.save('Cartones_Bingo_Musical_Valdemoro_del_Rey.pdf');
+}
+
+// ========= VALIDACIÓN DE BOLETOS =========
+function openValidator(){
+  valResult.textContent = '';
+  validatorOverlay.style.display = 'flex';
+  validatorOverlay.setAttribute('aria-hidden','false');
+  const inputs = [...valGrid.querySelectorAll('input')];
+  inputs.forEach(i=>{ i.value=''; i.classList.remove('invalid','hit','miss'); });
+  inputs[0].focus();
+}
+function closeValidator(){
+  validatorOverlay.style.display = 'none';
+  validatorOverlay.setAttribute('aria-hidden','true');
+}
+function parseTicketInputs(){
+  const inputs = [...valGrid.querySelectorAll('input')];
+  const first = inputs[0].value.trim();
+  let nums = [];
+  if(first && /[, \t;]+/.test(first)){
+    nums = first.split(/[,; \t]+/).filter(Boolean);
+    for(let i=0;i<Math.min(8, nums.length); i++){
+      inputs[i].value = nums[i];
+    }
+  }
+  const values = inputs.map(x => parseInt((x.value||'').trim(),10)).filter(n=>Number.isFinite(n));
+  const max = tracks.length;
+  const set = Array.from(new Set(values)).filter(n => n>=1 && n<=max);
+  return set.slice(0,8);
+}
+function validateTicket(){
+  const inputs = [...valGrid.querySelectorAll('input')];
+  inputs.forEach(i => i.classList.remove('invalid','hit','miss'));
+
+  // Redistribuir pegado CSV si procede, antes de colorear
+  const ticket = parseTicketInputs();
+  const drawnNums = new Set(drawn.map(d=>d.index+1));
+  const max = tracks.length;
+
+  // Colorear casillas rellenas ya
+  inputs.forEach(i => {
+    const v = i.value.trim();
+    if(v === '') return;
+    const n = parseInt(v, 10);
+    if(Number.isFinite(n) && n >= 1 && n <= max){
+      i.classList.add(drawnNums.has(n) ? 'hit' : 'miss');
+    } else {
+      i.classList.add('invalid');
+    }
+  });
+
+  const emptyInputs = inputs.filter(i => i.value.trim() === '');
+  if(emptyInputs.length > 0){
+    emptyInputs.forEach(i => i.classList.add('invalid'));
+    valResult.className = 'result err';
+    valResult.textContent = `Faltan ${emptyInputs.length} casilla${emptyInputs.length > 1 ? 's' : ''} por rellenar.`;
+    emptyInputs[0].focus();
+    return;
+  }
+
+  if(ticket.length !== 8){
+    valResult.className = 'result err';
+    valResult.textContent = 'Necesitas 8 números válidos y distintos del cartón.';
+    return;
+  }
+
+  const notOut = ticket.filter(n => !drawnNums.has(n)).sort((a,b)=>a-b);
+  if(notOut.length === 0){
+    valResult.className = 'result ok';
+    valResult.textContent = '✅ ¡Boleto CORRECTO! Todas las casillas han salido.';
+  } else {
+    const items = notOut.map(n=>{
+      const s = tracks[n-1] || {};
+      const label = `${s?.artist ?? '—'} – ${s?.title ?? '—'}`;
+      return `<li><strong>${n}</strong>: ${escapeHtml(label)}</li>`;
+    }).join('');
+    valResult.className = 'result err';
+    valResult.innerHTML = `❌ Boleto NO válido. Faltan:
+      <ul style="margin:.5em 0 0 .9em; padding:0">${items}</ul>`;
+  }
+}
+
+validateBtn.addEventListener('click', openValidator);
+valClose.addEventListener('click', closeValidator);
+validatorOverlay.addEventListener('click', (e)=>{ if(e.target === validatorOverlay) closeValidator(); });
+valCheck.addEventListener('click', validateTicket);
+valClear.addEventListener('click', ()=>{
+  [...valGrid.querySelectorAll('input')].forEach(i=>{ i.value=''; i.classList.remove('invalid','hit','miss'); });
+  valResult.textContent='';
+  valGrid.querySelector('input')?.focus();
+});
+valGrid.addEventListener('input', (e)=>{
+  if(e.target.tagName === 'INPUT'){
+    const v = e.target.value.trim();
+    e.target.classList.remove('hit','miss');
+    if(v !== '' && !/^\d+$/.test(v)){
+      e.target.classList.add('invalid');
+    } else {
+      e.target.classList.remove('invalid');
+      valResult.textContent = '';
+      valResult.className = 'result';
+    }
+  }
+});
+valGrid.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const inputs = [...valGrid.querySelectorAll('input')];
+    const idx = inputs.indexOf(e.target);
+    if(idx >= 0 && idx < inputs.length-1){
+      inputs[idx+1].focus();
+    }else{
+      validateTicket();
+    }
+  }
+});
+valGrid.querySelector('input')?.addEventListener('paste', (e)=>{
+  const clip = (e.clipboardData || window.clipboardData).getData('text') || '';
+  if(/[,; \t]+/.test(clip)){
+    e.preventDefault();
+    const parts = clip.split(/[,; \t]+/).filter(Boolean).slice(0,8);
+    const inputs = [...valGrid.querySelectorAll('input')];
+    parts.forEach((v,i)=>{ if(inputs[i]) inputs[i].value = v; });
+    (inputs[parts.length] || inputs[0]).focus();
+  }
+});
+</script>
+</body>
+</html>
