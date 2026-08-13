@@ -121,7 +121,7 @@ select.btn{appearance:auto;padding-right:8px}
         <option value="youtube">Preferir YouTube</option>
         <option value="spotify">Preferir Spotify</option>
       </select>
-      <label class="toggle"><input type="checkbox" id="cbSound" checked> Sonido al sacar bola</label>
+      <label class="toggle"><input type="checkbox" id="cbSound" checked> Voz en off al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbAutoOpen"> Abrir enlace al sacar bola</label>
       <label class="toggle"><input type="checkbox" id="cbEmbed" checked> Mostrar reproductor</label>
       <label class="toggle"><input type="checkbox" id="cbBalanced" checked> Modo equilibrado (jóvenes/mayores/bisagra)</label>
@@ -438,23 +438,27 @@ function restoreState(trackList){
   }catch(e){ return false; }
 }
 
-// Beep "clásico" bingo
-let audioCtx;
-function bingoBeep(){
+// Voz en off al sacar bola (usa síntesis de voz del navegador)
+function getSpanishVoice(){
+  const voices = (window.speechSynthesis && window.speechSynthesis.getVoices)
+    ? window.speechSynthesis.getVoices()
+    : [];
+  return voices.find(v => /^es([_-]|$)/i.test(v.lang)) || voices[0] || null;
+}
+
+function speakDrawnBall(index, item){
   if(!cbSound.checked) return;
+  if(!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') return;
   try{
-    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-    const o = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    o.type = 'triangle';
-    o.frequency.setValueAtTime(620, audioCtx.currentTime);
-    o.frequency.exponentialRampToValueAtTime(420, audioCtx.currentTime + 0.15);
-    g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.4, audioCtx.currentTime + 0.02);
-    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3);
-    o.connect(g).connect(audioCtx.destination);
-    o.start();
-    o.stop(audioCtx.currentTime + 0.32);
+    const synth = window.speechSynthesis;
+    if(synth.speaking) synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(`Bola ${index + 1}. ${item.title}, de ${item.artist}.`);
+    const voice = getSpanishVoice();
+    if(voice) utterance.voice = voice;
+    utterance.lang = voice?.lang || 'es-ES';
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    synth.speak(utterance);
   }catch(e){}
 }
 
@@ -751,7 +755,7 @@ function drawOne(){
   drawn.push({item, index: idx});
   setCurrent(item, idx);
   updateUI();
-  bingoBeep();
+  speakDrawnBall(idx, item);
   status("");
   saveState();
   if(cbAutoOpen.checked){
@@ -888,17 +892,23 @@ function updateFilterCount(){
   filterCountMsg.textContent = `${activeCount} de ${fullCatalog.length} canciones activas.`;
 }
 
+function expectedActiveCount(){
+  // Regla de juego: la edición debe validarse siempre sobre 90 canciones.
+  return 90;
+}
+
 function applyFilter(){
   const activeCount = fullCatalog.filter(t => t.active !== false).length;
+  const expectedCount = expectedActiveCount();
   const {arranged, error} = computeFilteredArranged(fullCatalog);
   if(error){
     alert(error);
     return;
   }
-  if(activeCount !== 89){
-    const diff = activeCount < 89
-      ? `Faltan ${89 - activeCount} para llegar a las 89 habituales.`
-      : `Son ${activeCount - 89} más de las 89 habituales.`;
+  if(activeCount !== expectedCount){
+    const diff = activeCount < expectedCount
+      ? `Faltan ${expectedCount - activeCount} para llegar a las ${expectedCount} habituales.`
+      : `Son ${activeCount - expectedCount} más de las ${expectedCount} habituales.`;
     if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Aplicar el filtro de todos modos?`)) return;
   }
   const applyIt = () => {
@@ -918,10 +928,11 @@ function applyFilter(){
 
 function downloadFilteredJson(){
   const activeCount = fullCatalog.filter(t => t.active !== false).length;
-  if(activeCount !== 89){
-    const diff = activeCount < 89
-      ? `Faltan ${89 - activeCount} para llegar a las 89 habituales.`
-      : `Son ${activeCount - 89} más de las 89 habituales.`;
+  const expectedCount = expectedActiveCount();
+  if(activeCount !== expectedCount){
+    const diff = activeCount < expectedCount
+      ? `Faltan ${expectedCount - activeCount} para llegar a las ${expectedCount} habituales.`
+      : `Son ${activeCount - expectedCount} más de las ${expectedCount} habituales.`;
     if(!confirm(`Tienes ${activeCount} canciones seleccionadas. ${diff}\n¿Descargar el JSON filtrado de todos modos?`)) return;
   }
   const payload = {
